@@ -1,0 +1,22 @@
+services:
+  node-red:
+    image: nodered/node-red:latest
+    container_name: node-red
+    environment:
+      - TZ=Asia/Taipei
+    ports:
+      - "1880:1880"
+    volumes:
+      - node_red_data:/data
+    restart: unless-stopped
+    # 這裡我們覆寫指令：先印出網址，再啟動原本的 Node-RED
+    entrypoint: ["/bin/sh", "-c", "echo '--------------------------------------------'; echo '🚀 Node-RED 服務準備中...'; echo '🔗 本地訪問網址: http://localhost:1880'; echo '--------------------------------------------' && ./entrypoint.sh"]
+    networks:
+     - iot-network
+     
+volumes:
+  node_red_data:
+
+networks:
+  iot-network:
+    external: true

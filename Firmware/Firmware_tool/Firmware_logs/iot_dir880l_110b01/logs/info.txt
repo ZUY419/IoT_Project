@@ -1,0 +1,63 @@
+[15:48:09] ______   _                ___
+[15:48:09] |  ___| (_)              / _ \
+[15:48:09] | |_     _   _ __ ___   / /_\ \  _ __    ___
+[15:48:09] |  _|   | | | '_ ` _ \  |  _  | | '_ \  / __| ++
+[15:48:09] | |     | | | | | | | | | | | | | | | | \__ \
+[15:48:09] \_|     |_| |_| |_| |_| \_| |_/ |_| |_| |___/
+[15:48:09] Welcome to the Firmware Analysis Plus - v2.3.1
+[15:48:09] By lys - https://github.com/liyansong2018/firmware-analysis-plus
+[15:48:09] [+] Firmware: iot_dir880l_110b01.bin
+[15:48:09] [+] Extracting the firmware...
+[15:48:09] Traceback (most recent call last):
+[15:48:09] File "/usr/lib/python3/dist-packages/pexpect/spawnbase.py", line 166, in read_nonblocking
+[15:48:09] s = os.read(self.child_fd, size)
+[15:48:09] During handling of the above exception, another exception occurred:
+[15:48:09] Traceback (most recent call last):
+[15:48:09] File "/usr/lib/python3/dist-packages/pexpect/expect.py", line 111, in expect_loop
+[15:48:09] incoming = spawn.read_nonblocking(spawn.maxread, timeout)
+[15:48:09] File "/usr/lib/python3/dist-packages/pexpect/pty_spawn.py", line 485, in read_nonblocking
+[15:48:09] return super(spawn, self).read_nonblocking(size)
+[15:48:09] File "/usr/lib/python3/dist-packages/pexpect/spawnbase.py", line 171, in read_nonblocking
+[15:48:09] raise EOF('End Of File (EOF). Exception style platform.')
+[15:48:09] pexpect.exceptions.EOF: End Of File (EOF). Exception style platform.
+[15:48:09] During handling of the above exception, another exception occurred:
+[15:48:09] Traceback (most recent call last):
+[15:48:09] File "fap.py", line 210, in <module>
+[15:48:09] main()
+[15:48:09] File "fap.py", line 198, in main
+[15:48:09] image_id = run_extractor(args.firm_path, args.binwalk, host)
+[15:48:09] File "fap.py", line 58, in run_extractor
+[15:48:09] child.expect_exact("Tag: ")
+[15:48:09] File "/usr/lib/python3/dist-packages/pexpect/spawnbase.py", line 418, in expect_exact
+[15:48:09] return exp.expect_loop(timeout)
+[15:48:09] File "/usr/lib/python3/dist-packages/pexpect/expect.py", line 117, in expect_loop
+[15:48:09] return self.eof(e)
+[15:48:09] File "/usr/lib/python3/dist-packages/pexpect/expect.py", line 63, in eof
+[15:48:09] raise EOF(msg)
+[15:48:09] pexpect.exceptions.EOF: End Of File (EOF). Exception style platform.
+[15:48:09] <pexpect.pty_spawn.spawn object at 0x7f8fa7b51430>
+[15:48:09] command: /usr/bin/python3
+[15:48:09] args: ['/usr/bin/python3', '/app/Firmware_tool/firmware-analysis-plus/firmadyne/sources/extractor/extractor.py', '-np', '-nk', './fw_bin/iot_dir880l_110b01.bin', '/app/Firmware_tool/firmware-analysis-plus/firmadyne/images']
+[15:48:09] buffer (last 100 chars): b''
+[15:48:09] before (last 100 chars): b"mware-analysis-plus/firmadyne/sources/extractor/extractor.py': [Errno 2] No such file or directory\r\n"
+[15:48:09] after: <class 'pexpect.exceptions.EOF'>
+[15:48:09] match: None
+[15:48:09] match_index: None
+[15:48:09] exitstatus: None
+[15:48:09] flag_eof: True
+[15:48:09] pid: 8185
+[15:48:09] child_fd: 5
+[15:48:09] closed: False
+[15:48:09] timeout: None
+[15:48:09] delimiter: <class 'pexpect.exceptions.EOF'>
+[15:48:09] logfile: None
+[15:48:09] logfile_read: None
+[15:48:09] logfile_send: None
+[15:48:09] maxread: 2000
+[15:48:09] ignorecase: False
+[15:48:09] searchwindowsize: None
+[15:48:09] delaybeforesend: 0.05
+[15:48:09] delayafterclose: 0.1
+[15:48:09] delayafterterminate: 0.1
+[15:48:09] searcher: searcher_string:
+[15:48:09] 0: b'Tag: '

@@ -1,0 +1,18 @@
+services:
+  mongo-db:
+    image: mongo:latest
+    container_name: mongo-db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - iot-network
+    restart: unless-stopped
+
+networks:
+  iot-network:
+    external: true
+
+volumes:
+  mongo_data:
