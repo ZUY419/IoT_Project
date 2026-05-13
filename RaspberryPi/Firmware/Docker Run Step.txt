@@ -1,0 +1,27 @@
+# list all containers & delete all containers
+docker container ls -a
+docker container prune
+docker rm -f $(docker ps -aq)
+
+# list all images & delete all images
+docker image ls
+docker rmi -f $(docker images -aq)
+
+# build image
+docker build -t firmware-tool:latest .
+
+# run container
+docker run -it --rm \
+  --privileged \
+  -v /dev:/dev \
+  -v /lib/modules:/lib/modules \
+  -v $(pwd)/scratch:/app/Firmware_tool/firmware-analysis-plus/firmadyne/scratch \
+  firmware-tool:latest
+
+# Open network tunnel
+sudo modprobe tun
+
+# Build & run docker-compose
+docker-compose up --build
+
+pip freeze > requirements.txt

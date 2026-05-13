@@ -1,0 +1,4 @@
+{"firmware": "dir601_revB_FW_201", "timestamp": "15:10:22", "label": "Nothing", "message": "Traceback (most recent call last):"}
+{"firmware": "dir601_revB_FW_201", "timestamp": "15:10:22", "label": "Nothing", "message": "File \"/app/Firmware/Firmware_tool/firmware-analysis-plus/fap.py\", line 5, in <module>"}
+{"firmware": "dir601_revB_FW_201", "timestamp": "15:10:22", "label": "Nothing", "message": "import pexpect"}
+{"firmware": "dir601_revB_FW_201", "timestamp": "15:10:22", "label": "Error", "message": "ModuleNotFoundError: No module named 'pexpect'"}
