@@ -1,0 +1,7 @@
+langchain
+langchain-community
+langchain-core
+langchain-ollama
+ollama
+pymongo
+paho-mqtt

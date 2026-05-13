@@ -1,0 +1,54 @@
+
+services:
+  # MQTT Broker
+  mqtt_broker:
+    image: eclipse-mosquitto:latest
+    container_name: mqtt_broker
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/config:/mosquitto/config
+
+  # Node-RED
+  iot_logic:
+    image: nodered/node-red:latest
+    container_name: iot_logic
+    ports:
+      - "1880:1880"
+    volumes:
+      - ./nodered/data:/data
+    depends_on:
+      - mqtt_broker
+      - db
+
+  # 資料庫（MongoDB）
+  db:
+    image: mongo:latest
+    container_name: mongo_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./mongo/data:/data/db
+      
+  # Ollama
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./ai/ollama:/root/.ollama
+
+  # LangChain AI Agent
+  ai_agent:
+    build: ./ai/langchain
+    container_name: ai_agent
+    volumes:
+      - ./ai/langchain:/app
+    working_dir: /app
+    command: python main.py
+    depends_on:
+      - ollama
+      - db
+      - mqtt_broker
