@@ -1,0 +1,41 @@
+services:
+  # 資料庫
+  mongoDB:
+    image: mongo:latest
+    container_name: mongoDB
+    ports: 
+      - "27017:27017"
+    volumes:
+      - ./Docker/mongoDB:/data/db
+    networks: 
+      - hostServer
+    restart: unless-stopped
+
+  # MQTT
+  mqttBroker:
+    image: eclipse-mosquitto:latest
+    container_name: MQTT-host
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./Docker/MQTT/config/mosquitto.conf:/mosquitto/config/mosquitto.conf
+    privileged: true
+    networks:
+      - hostServer
+    restart: unless-stopped
+
+  # nodeRED 網路邏輯
+  nodeRED:
+    image: nodered/node-red:latest
+    container_name: nodeRED
+    ports:
+      - "1880:1880"
+    volumes:
+      - ./Docker/Node_RED:/data
+    networks:
+      - hostServer
+    restart: unless-stopped
+
+networks:
+  hostServer:
+    name: hostServer
