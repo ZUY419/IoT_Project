@@ -1,0 +1,36 @@
+services:
+  # MQTT
+  mqttBroker:
+    image: eclipse-mosquitto:latest
+    container_name: MQTT-respberryPi
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./Docker/MQTT/config/mosquitto.conf:/mosquitto/config/mosquitto.conf
+    privileged: true
+    networks:
+      - iotServer
+    restart: unless-stopped
+  # 韌體模擬器
+  fap:
+    container_name: FAP
+    build: .
+    user: root
+    volumes:
+    - ./fap_output:/app/fap_log
+    privileged: true
+    cap_add:
+      - NET_ADMIN     # 額外確保網路管理權限
+    devices:
+      - /dev/net/tun  # 讓容器能直接存取 tun 裝置
+    networks:
+      - iotServer
+    ports:
+      - "80:80"
+    working_dir: /app
+    stdin_open: true
+    tty: true
+
+networks:
+  iotServer:
+    name: iotServer
