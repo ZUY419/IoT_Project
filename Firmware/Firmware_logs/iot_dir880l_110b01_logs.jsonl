@@ -1,0 +1,1146 @@
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:47:50", "label": "Nothing", "message": "______   _                ___"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:47:50", "label": "Nothing", "message": "|  ___| (_)              / _ \\"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:47:50", "label": "Nothing", "message": "| |_     _   _ __ ___   / /_\\ \\  _ __    ___"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:47:50", "label": "Nothing", "message": "|  _|   | | | '_ ` _ \\  |  _  | | '_ \\  / __| ++"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:47:50", "label": "Nothing", "message": "| |     | | | | | | | | | | | | | | | | \\__ \\"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:47:50", "label": "Nothing", "message": "\\_|     |_| |_| |_| |_| \\_| |_/ |_| |_| |___/"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:47:50", "label": "Nothing", "message": "Welcome to the Firmware Analysis Plus - v2.3.1"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:47:50", "label": "Nothing", "message": "By lys - https://github.com/liyansong2018/firmware-analysis-plus"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:47:51", "label": "Nothing", "message": "[+] Firmware: iot_dir880l_110b01.bin"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:47:51", "label": "Nothing", "message": "[+] Extracting the firmware..."}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:47:56", "label": "Nothing", "message": "[+] Image ID: 1"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:47:56", "label": "Nothing", "message": "[+] Identifying architecture..."}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:47:57", "label": "Nothing", "message": "[+] Architecture: armel"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:47:57", "label": "Nothing", "message": "[+] Building QEMU disk image..."}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:47:59", "label": "Nothing", "message": "[+] Setting up the network connection, please standby..."}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:00", "label": "Nothing", "message": "[+] Network interfaces: [('br0', '192.168.0.1'), ('br1', '192.168.7.1')]"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:00", "label": "Network", "message": "http://192.168.0.1"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:00", "label": "Network", "message": "http://192.168.7.1"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:00", "label": "Nothing", "message": "[+] Using qemu-system-arm from /home/iss/iot_project/Firmware/Firmware_tool/firmware-analysis-plus/qemu-builds/2.5.0"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:01", "label": "Nothing", "message": "[+] All set! Press ENTER to run the firmware..."}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:03", "label": "Nothing", "message": "[+] When running, press Ctrl + A X to terminate qemu"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:04", "label": "Nothing", "message": "[+] Command line: /home/iss/iot_project/Firmware/Firmware_tool/firmware-analysis-plus/firmadyne/scratch/1/run.sh"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:05", "label": "Nothing", "message": "[sudo] password for iss:"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:06", "label": "Nothing", "message": "Creating TAP device tap1_0..."}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:07", "label": "Nothing", "message": "Set 'tap1_0' persistent and owned by uid 0"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:08", "label": "Nothing", "message": "Initializing VLAN..."}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:09", "label": "Nothing", "message": "Bringing up TAP device..."}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:10", "label": "Nothing", "message": "Adding route to 192.168.0.1..."}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:11", "label": "Nothing", "message": "Starting firmware emulation... use Ctrl-a + x to exit"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:12", "label": "Waring", "message": "Warning: hub port hub3port0 has no peer"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:12", "label": "Waring", "message": "Warning: vlan 3 with no nics"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:13", "label": "Waring", "message": "Warning: hub port hub2port0 has no peer"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:14", "label": "Waring", "message": "Warning: vlan 2 with no nics"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:15", "label": "Waring", "message": "Warning: hub port hub1port0 has no peer"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:16", "label": "Waring", "message": "Warning: vlan 1 with no nics"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:17", "label": "Waring", "message": "Warning: netdev hub1port0 has no peer"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:18", "label": "Waring", "message": "Warning: netdev hub2port0 has no peer"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:19", "label": "Waring", "message": "Warning: netdev hub3port0 has no peer"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:20", "label": "Waring", "message": "Warning: requested NIC (anonymous, model unspecified) was not created (not supported by this machine?)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:21", "label": "Waring", "message": "Warning: requested NIC (anonymous, model unspecified) was not created (not supported by this machine?)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:22", "label": "Waring", "message": "Warning: requested NIC (anonymous, model unspecified) was not created (not supported by this machine?)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:23", "label": "Nothing", "message": "[    0.000000] Booting Linux on physical CPU 0x0"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:23", "label": "Nothing", "message": "[    0.000000] Linux version 4.1.17+ (vagrant@vagrant-ubuntu-trusty-64) (gcc version 5.3.0 (GCC) ) #1 Thu Feb 18 01:05:21 UTC 2016"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:24", "label": "Nothing", "message": "[    0.000000] CPU: ARMv7 Processor [412fc0f1] revision 1 (ARMv7), cr=10c5387d"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:25", "label": "Nothing", "message": "[    0.000000] CPU: PIPT / VIPT nonaliasing data cache, PIPT instruction cache"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:25", "label": "Nothing", "message": "[    0.000000] Machine model: linux,dummy-virt"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:26", "label": "Nothing", "message": "[    0.000000] debug: ignoring loglevel setting."}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:27", "label": "Nothing", "message": "[    0.000000] Memory policy: Data cache writeback"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:28", "label": "Nothing", "message": "[    0.000000] On node 0 totalpages: 65536"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:29", "label": "Nothing", "message": "[    0.000000] free_area_init_node: node 0, pgdat c061dfe8, node_mem_map cfdf9000"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:30", "label": "Nothing", "message": "[    0.000000]   Normal zone: 512 pages used for memmap"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:31", "label": "Nothing", "message": "[    0.000000]   Normal zone: 0 pages reserved"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:32", "label": "Nothing", "message": "[    0.000000]   Normal zone: 65536 pages, LIFO batch:15"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:33", "label": "Nothing", "message": "[    0.000000] psci: probing for conduit method from DT."}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:33", "label": "Nothing", "message": "[    0.000000] psci: PSCIv0.2 detected in firmware."}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:34", "label": "Nothing", "message": "[    0.000000] psci: Using standard PSCI v0.2 function IDs"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:34", "label": "Nothing", "message": "[    0.000000] CPU: All CPU(s) started in SVC mode."}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:35", "label": "Nothing", "message": "[    0.000000] pcpu-alloc: s0 r0 d32768 u32768 alloc=1*32768"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:35", "label": "Nothing", "message": "[    0.000000] pcpu-alloc: [0] 0"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:36", "label": "Nothing", "message": "[    0.000000] Built 1 zonelists in Zone order, mobility grouping on.  Total pages: 65024"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:36", "label": "Nothing", "message": "[    0.000000] Kernel command line: root=/dev/vda1 console=ttyS0 nandsim.parts=64,64,64,64,64,64,64,64,64,64 rdinit=/firmadyne/preInit.sh rw debug ignore_loglevel print-fatal-signals=1 user_debug=31 firmadyne.syscall=0"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:37", "label": "Nothing", "message": "[    0.000000] PID hash table entries: 1024 (order: 0, 4096 bytes)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:37", "label": "Nothing", "message": "[    0.000000] Dentry cache hash table entries: 32768 (order: 5, 131072 bytes)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:38", "label": "Nothing", "message": "[    0.000000] Inode-cache hash table entries: 16384 (order: 4, 65536 bytes)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:38", "label": "Nothing", "message": "[    0.000000] Memory: 253340K/262144K available (4297K kernel code, 170K rwdata, 1584K rodata, 180K init, 148K bss, 8804K reserved, 0K cma-reserved)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:39", "label": "Nothing", "message": "[    0.000000] Virtual kernel memory layout:"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:39", "label": "Nothing", "message": "[    0.000000]     vector  : 0xffff0000 - 0xffff1000   (   4 kB)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:40", "label": "Nothing", "message": "[    0.000000]     fixmap  : 0xffc00000 - 0xfff00000   (3072 kB)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:40", "label": "Nothing", "message": "[    0.000000]     vmalloc : 0xd0800000 - 0xff000000   ( 744 MB)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:41", "label": "Nothing", "message": "[    0.000000]     lowmem  : 0xc0000000 - 0xd0000000   ( 256 MB)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:41", "label": "Nothing", "message": "[    0.000000]     modules : 0xbf000000 - 0xc0000000   (  16 MB)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:42", "label": "Nothing", "message": "[    0.000000]       .text : 0xc0008000 - 0xc05c67bc   (5882 kB)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:42", "label": "Nothing", "message": "[    0.000000]       .init : 0xc05c7000 - 0xc05f4000   ( 180 kB)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:43", "label": "Nothing", "message": "[    0.000000]       .data : 0xc05f4000 - 0xc061e840   ( 171 kB)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:43", "label": "Nothing", "message": "[    0.000000]        .bss : 0xc0621000 - 0xc06462d4   ( 149 kB)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:44", "label": "Nothing", "message": "[    0.000000] NR_IRQS:16 nr_irqs:16 16"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:44", "label": "Nothing", "message": "[    0.000000] Architected cp15 timer(s) running at 62.50MHz (virt)."}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:45", "label": "Nothing", "message": "[    0.000000] clocksource arch_sys_counter: mask: 0xffffffffffffff max_cycles: 0x1cd42e208c, max_idle_ns: 881590405314 ns"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:45", "label": "Nothing", "message": "[    0.000255] sched_clock: 56 bits at 62MHz, resolution 16ns, wraps every 4398046511096ns"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:46", "label": "Nothing", "message": "[    0.000521] Switching to timer-based delay loop, resolution 16ns"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:46", "label": "Nothing", "message": "[    0.005357] Console: colour dummy device 80x30"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:47", "label": "Nothing", "message": "[    0.005781] Calibrating delay loop (skipped), value calculated using timer frequency.. 125.00 BogoMIPS (lpj=625000)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:47", "label": "Nothing", "message": "[    0.006046] pid_max: default: 32768 minimum: 301"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:48", "label": "Nothing", "message": "[    0.007303] Mount-cache hash table entries: 1024 (order: 0, 4096 bytes)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:48", "label": "Nothing", "message": "[    0.007358] Mountpoint-cache hash table entries: 1024 (order: 0, 4096 bytes)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:49", "label": "Nothing", "message": "[    0.012328] CPU: Testing write buffer coherency: ok"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:49", "label": "Nothing", "message": "[    0.014543] Setting up static identity map for 0x40008240 - 0x40008298"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:50", "label": "Nothing", "message": "[    0.020524] VFP support v0.3: implementor 41 architecture 4 part 30 variant f rev 0"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:50", "label": "Nothing", "message": "[    0.023837] clocksource jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 19112604462750000 ns"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:51", "label": "Nothing", "message": "[    0.027004] NET: Registered protocol family 16"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:51", "label": "Nothing", "message": "[    0.028109] DMA: preallocated 256 KiB pool for atomic coherent allocations"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:52", "label": "Nothing", "message": "[    0.030634] cpuidle: using governor ladder"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:52", "label": "Nothing", "message": "[    0.030690] cpuidle: using governor menu"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:53", "label": "Nothing", "message": "[    0.038691] Serial: AMBA PL011 UART driver"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:54", "label": "Nothing", "message": "[    0.039453] 9000000.pl011: ttyS0 at MMIO 0x9000000 (irq = 53, base_baud = 0) is a PL011 rev1"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:54", "label": "Nothing", "message": "[    0.043739] console [ttyS0] enabled"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:55", "label": "Nothing", "message": "[    0.052933] vgaarb: loaded"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:55", "label": "Nothing", "message": "[    0.053524] SCSI subsystem initialized"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:56", "label": "Nothing", "message": "[    0.053951] usbcore: registered new interface driver usbfs"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:56", "label": "Nothing", "message": "[    0.054129] usbcore: registered new interface driver hub"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:57", "label": "Nothing", "message": "[    0.054271] usbcore: registered new device driver usb"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:49:57", "label": "Nothing", "message": "[    0.057857] cfg80211: Calling CRDA to update world regulatory domain"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.058736] Switched to clocksource arch_sys_counter"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.066036] NET: Registered protocol family 2"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.068007] TCP established hash table entries: 2048 (order: 1, 8192 bytes)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.068157] TCP bind hash table entries: 2048 (order: 1, 8192 bytes)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.068300] TCP: Hash tables configured (established 2048 bind 2048)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.068519] UDP hash table entries: 256 (order: 0, 4096 bytes)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.068935] UDP-Lite hash table entries: 256 (order: 0, 4096 bytes)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.069569] NET: Registered protocol family 1"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.069776] PCI: CLS 0 bytes, default 64"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.072559] NetWinder Floating Point Emulator V0.97 (extended precision)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.073592] futex hash table entries: 256 (order: -1, 3072 bytes)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.075769] squashfs: version 4.0 (2009/01/31) Phillip Lougher"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.076185] jffs2: version 2.2. (NAND) © 2001-2006 Red Hat, Inc."}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.076524] romfs: ROMFS MTD (C) 2007 Red Hat, Inc."}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.080361] Block layer SCSI generic (bsg) driver version 0.4 loaded (major 253)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.080535] io scheduler noop registered"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.080640] io scheduler cfq registered (default)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.080913] firmadyne: devfs: 1, execute: 1, procfs: 1, syscall: 0"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.081472] ------------[ cut here ]------------"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Waring", "message": "[    0.081584] WARNING: CPU: 0 PID: 1 at /home/vagrant/firmadyne-kernel/kernel-v4.1/fs/sysfs/dir.c:31 sysfs_warn_dup+0x50/0x6c()"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.081716] sysfs: cannot create duplicate filename '/class/gpio'"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.081799] Modules linked in:"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.081925] CPU: 0 PID: 1 Comm: swapper Not tainted 4.1.17+ #1"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.082015] Hardware name: Generic DT based system"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.082292] [<c001c99c>] (unwind_backtrace) from [<c0019d30>] (show_stack+0x10/0x14)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Waring", "message": "[    0.082493] [<c0019d30>] (show_stack) from [<c0024ab4>] (warn_slowpath_common+0x80/0xa8)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Waring", "message": "[    0.082626] [<c0024ab4>] (warn_slowpath_common) from [<c0024b08>] (warn_slowpath_fmt+0x2c/0x3c)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Waring", "message": "[    0.082757] [<c0024b08>] (warn_slowpath_fmt) from [<c00e363c>] (sysfs_warn_dup+0x50/0x6c)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Waring", "message": "[    0.082873] [<c00e363c>] (sysfs_warn_dup) from [<c00e3714>] (sysfs_create_dir_ns+0x74/0x84)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.082977] [<c00e3714>] (sysfs_create_dir_ns) from [<c018e6ac>] (kobject_add_internal+0xb8/0x2ac)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.083085] [<c018e6ac>] (kobject_add_internal) from [<c018e9a8>] (kset_register+0x1c/0x44)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.083187] [<c018e9a8>] (kset_register) from [<c02090b4>] (__class_register+0xa8/0x198)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.083285] [<c02090b4>] (__class_register) from [<c02091e4>] (__class_create+0x40/0x70)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.083385] [<c02091e4>] (__class_create) from [<c01adf68>] (register_devfs_stubs+0x314/0xbb4)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.083501] [<c01adf68>] (register_devfs_stubs) from [<c05d9b08>] (init_module+0x28/0xa4)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.083626] [<c05d9b08>] (init_module) from [<c0009670>] (do_one_initcall+0x104/0x1b4)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.083740] [<c0009670>] (do_one_initcall) from [<c05c7d08>] (kernel_init_freeable+0xf0/0x1b0)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.083848] [<c05c7d08>] (kernel_init_freeable) from [<c040f28c>] (kernel_init+0x8/0xe4)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.083948] [<c040f28c>] (kernel_init) from [<c0016da8>] (ret_from_fork+0x14/0x2c)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.084083] ---[ end trace b3a23c686b8ab730 ]---"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.084189] ------------[ cut here ]------------"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Waring", "message": "[    0.084268] WARNING: CPU: 0 PID: 1 at /home/vagrant/firmadyne-kernel/kernel-v4.1/lib/kobject.c:240 kobject_add_internal+0x240/0x2ac()"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.084400] kobject_add_internal failed for gpio with -EEXIST, don't try to register things with the same name in the same directory."}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.084538] Modules linked in:"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.084607] CPU: 0 PID: 1 Comm: swapper Tainted: G        W       4.1.17+ #1"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.084702] Hardware name: Generic DT based system"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.084771] [<c001c99c>] (unwind_backtrace) from [<c0019d30>] (show_stack+0x10/0x14)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Waring", "message": "[    0.084867] [<c0019d30>] (show_stack) from [<c0024ab4>] (warn_slowpath_common+0x80/0xa8)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Waring", "message": "[    0.084965] [<c0024ab4>] (warn_slowpath_common) from [<c0024b08>] (warn_slowpath_fmt+0x2c/0x3c)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Waring", "message": "[    0.085072] [<c0024b08>] (warn_slowpath_fmt) from [<c018e834>] (kobject_add_internal+0x240/0x2ac)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.085178] [<c018e834>] (kobject_add_internal) from [<c018e9a8>] (kset_register+0x1c/0x44)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.085288] [<c018e9a8>] (kset_register) from [<c02090b4>] (__class_register+0xa8/0x198)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.085386] [<c02090b4>] (__class_register) from [<c02091e4>] (__class_create+0x40/0x70)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.085498] [<c02091e4>] (__class_create) from [<c01adf68>] (register_devfs_stubs+0x314/0xbb4)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.085604] [<c01adf68>] (register_devfs_stubs) from [<c05d9b08>] (init_module+0x28/0xa4)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.085703] [<c05d9b08>] (init_module) from [<c0009670>] (do_one_initcall+0x104/0x1b4)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.085799] [<c0009670>] (do_one_initcall) from [<c05c7d08>] (kernel_init_freeable+0xf0/0x1b0)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.085902] [<c05c7d08>] (kernel_init_freeable) from [<c040f28c>] (kernel_init+0x8/0xe4)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.085997] [<c040f28c>] (kernel_init) from [<c0016da8>] (ret_from_fork+0x14/0x2c)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.086150] ---[ end trace b3a23c686b8ab731 ]---"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.086230] firmadyne: Cannot create device class: gpio!"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.086919] firmadyne: Cannot register character device: watchdog, 0xa, 0x82!"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.087033] firmadyne: Cannot register character device: wdt, 0xfd, 0x0!"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.121919] PCI host bridge /pcie@10000000 ranges:"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.122154]    IO 0x3eff0000..0x3effffff -> 0x00000000"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.122307]   MEM 0x10000000..0x3efeffff -> 0x10000000"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.122379]   MEM 0x8000000000..0xffffffffff -> 0x8000000000"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.122658] pci-host-generic 3f000000.pcie: resource collision: [mem 0x00000000-0xffffffff] conflicts with /pl011@9000000 [mem 0x09000000-0x09000fff]"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Error", "message": "[    0.122975] pci-host-generic: probe of 3f000000.pcie failed with error -16"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.127213] Non-volatile memory driver v1.3"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.136697] brd: module loaded"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.140900] loop: module loaded"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.145652]  vda: vda1"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.149373] 0.flash: Found 2 x16 devices at 0x0 in 32-bit bank. Manufacturer ID 0x000000 Chip ID 0x000000"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.149660] Intel/Sharp Extended Query Table at 0x0031"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.150167] Using buffer write method"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.150351] erase region 0: offset=0x0,size=0x80000,blocks=128"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.152203] 0.flash: Found 2 x16 devices at 0x0 in 32-bit bank. Manufacturer ID 0x000000 Chip ID 0x000000"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.152341] Intel/Sharp Extended Query Table at 0x0031"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.152771] Using buffer write method"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.152847] erase region 0: offset=0x0,size=0x80000,blocks=128"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.152938] Concatenating MTD devices:"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.152993] (0): \"0.flash\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.153032] (1): \"0.flash\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.153069] into device \"0.flash\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Waring", "message": "[    0.157371] [nandsim] warning: read_byte: unexpected data output cycle, state is STATE_READY return 0x0"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Waring", "message": "[    0.157511] [nandsim] warning: read_byte: unexpected data output cycle, state is STATE_READY return 0x0"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Waring", "message": "[    0.157619] [nandsim] warning: read_byte: unexpected data output cycle, state is STATE_READY return 0x0"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Waring", "message": "[    0.157722] [nandsim] warning: read_byte: unexpected data output cycle, state is STATE_READY return 0x0"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Waring", "message": "[    0.157823] [nandsim] warning: read_byte: unexpected data output cycle, state is STATE_READY return 0x0"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Waring", "message": "[    0.157925] [nandsim] warning: read_byte: unexpected data output cycle, state is STATE_READY return 0x0"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.158123] nand: device found, Manufacturer ID: 0x98, Chip ID: 0x39"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.158223] nand: Toshiba NAND 128MiB 1,8V 8-bit"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.158292] nand: 128 MiB, SLC, erase size: 16 KiB, page size: 512, OOB size: 16"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.158760] flash size: 128 MiB"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.158805] page size: 512 bytes"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.158846] OOB area size: 16 bytes"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.158889] sector size: 16 KiB"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.158929] pages number: 262144"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.158969] pages per sector: 32"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.159008] bus width: 8"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.159042] bits in sector size: 14"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.159084] bits in page size: 9"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.159126] bits in OOB size: 4"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.159169] flash size with OOB: 135168 KiB"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.159219] page address bytes: 4"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.159277] sector address bytes: 3"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.159322] options: 0x42"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.160919] Scanning device for bad blocks"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.249054] firmadyne: do_execve: /firmadyne/console"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.249175] OFFSETS: offset of pid: 0x190 offset of comm: 0x270"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.249406] Creating 11 MTD partitions on \"NAND 128MiB 1,8V 8-bit\":"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.249601] 0x000000000000-0x000000100000 : \"NAND simulator partition 0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.250559] 0x000000100000-0x000000200000 : \"NAND simulator partition 1\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.251247] 0x000000200000-0x000000300000 : \"NAND simulator partition 2\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.251916] 0x000000300000-0x000000400000 : \"NAND simulator partition 3\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.252567] 0x000000400000-0x000000500000 : \"NAND simulator partition 4\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.253206] 0x000000500000-0x000000600000 : \"NAND simulator partition 5\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.253858] 0x000000600000-0x000000700000 : \"NAND simulator partition 6\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.254576] 0x000000700000-0x000000800000 : \"NAND simulator partition 7\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.255230] 0x000000800000-0x000000900000 : \"NAND simulator partition 8\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.255900] 0x000000900000-0x000000a00000 : \"NAND simulator partition 9\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.256545] 0x000000a00000-0x000008000000 : \"NAND simulator partition 10\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.259129] tun: Universal TUN/TAP device driver, 1.6"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.259215] tun: (C) 1999-2004 Max Krasnyansky <maxk@qualcomm.com>"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.262121] PPP generic driver version 2.4.2"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.262436] PPP BSD Compression module registered"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.262541] PPP Deflate Compression module registered"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.262650] PPP MPPE Compression module registered"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.262722] NET: Registered protocol family 24"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.262857] PPTP driver version 0.8.5"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.263737] usbcore: registered new interface driver usb-storage"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.265019] rtc-pl031 9010000.pl031: rtc core: registered pl031 as rtc0"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.265347] hidraw: raw HID events driver (C) Jiri Kosina"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.265601] usbcore: registered new interface driver usbhid"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.265692] usbhid: USB HID core driver"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.265883] Netfilter messages via NETLINK v0.30."}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.266160] nf_conntrack version 0.5.0 (3958 buckets, 15832 max)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.266733] ctnetlink v0.93: registering with nfnetlink."}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.267330] ipip: IPv4 over IPv4 tunneling driver"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.268234] gre: GRE over IPv4 demultiplexor driver"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.268334] ip_gre: GRE over IPv4 tunneling driver"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.270311] ip_tables: (C) 2000-2006 Netfilter Core Team"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.271069] arp_tables: (C) 2002 David S. Miller"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.271518] Initializing XFRM netlink socket"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.271748] NET: Registered protocol family 10"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.280292] ip6_tables: (C) 2000-2006 Netfilter Core Team"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.282217] sit: IPv6 over IPv4 tunneling driver"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.285556] NET: Registered protocol family 17"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.285948] bridge: automatic filtering via arp/ip/ip6tables has been deprecated. Update your scripts to load br_netfilter if you need this."}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.286245] Bridge firewalling registered"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.286366] Ebtables v2.0 registered"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.287031] 8021q: 802.1Q VLAN Support v1.8"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.287439] Registering SWP/SWPB emulation handler"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.288882] rtc-pl031 9010000.pl031: setting system clock to 2026-05-20 11:49:05 UTC (1779277745)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.293333] EXT4-fs (vda1): couldn't mount as ext3 due to feature incompatibilities"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.293957] EXT4-fs (vda1): mounting ext2 file system using the ext4 subsystem"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Waring", "message": "[    0.298919] EXT4-fs (vda1): warning: mounting unchecked fs, running e2fsck is recommended"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.300292] EXT4-fs (vda1): mounted filesystem without journal. Opts: (null)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.300823] VFS: Mounted root (ext2 filesystem) on device 254:1."}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.304127] Freeing unused kernel memory: 180K (c05c7000 - c05f4000)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.317947] random: init urandom read with 1 bits of entropy available"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.319639] firmadyne: sys_reboot[PID: 1 (init)]: magic1:fee1dead, magic2:28121969, cmd:0"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "init started: BusyBox v1.14.1 (2018-02-08 14:57:00 CST)"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[/etc/init.d/S10init.sh]"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "mount: mounting usbfs on /proc/bus/usb failed: No such file or directory"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[/etc/init.d/S12ubs_storage.sh]"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[/etc/init.d/S15udevd.sh]"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[    0.391226] udevd (77): /proc/77/oom_adj is deprecated, please use /proc/77/oom_score_adj instead."}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[/etc/init.d/S16ipv6.sh]"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[/etc/init.d/S19init.sh]"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[/etc/init.d/S20init.sh]"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "the mfc do not init wifi password,using default"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "the mfc do not init wifi password,using default"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "DEVCONF: unable to read config data (ret=-3) !"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "!!     Uable to read device config.     !!"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "!! Setting is reset to factory default. !!"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "DEFNODE[/etc/defnodes/S11devdata.xml]"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "DEFNODE[/etc/defnodes/S12devdata.php]"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "DEFNODE[/etc/defnodes/S12flashspeed.php]"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "DEFNODE[/etc/defnodes/S13dfs.php]"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "DEFNODE[/etc/defnodes/S14setchlist.php]"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Error", "message": "phplib/getchlist.php - GETCHLIST() ERROR: no Country Code!!! Please check if you board is initialized."}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "DEFNODE[/etc/defnodes/S20device.xml]"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "DEFNODE[/etc/defnodes/S22timezone.php]"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[/etc/scripts/setdate.sh] 01/01/2000 ..."}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "Sat Jan  1 11:49:06 UTC 2000"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "DEFNODE[/etc/defnodes/S30device.php]"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "DEFNODE[/etc/defnodes/S30device.xml]"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "DEFNODE[/etc/defnodes/S31diagnostic.xml]"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "DEFNODE[/etc/defnodes/S31locale.php]"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "DEFNODE[/etc/defnodes/S33wifi.php]"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "DEFNODE[/etc/defnodes/S40device.xml]"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "DEFNODE[/etc/defnodes/S40links.php]"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "DEFNODE[/etc/defnodes/S90opendns.php]"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "DEFNODE[/etc/defnodes/S90sessions.php]"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "DEFNODE[/etc/defnodes/S90upnpigd.php]"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "DEFNODE[/etc/defnodes/S90upnpwfa.php]"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "DEFNODE[/etc/defnodes/S91upnpigd2.php]"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "DEVCONF: unable to read config data (ret=-3) !"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "Thu Feb  8 00:00:00 GMT 2018"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "Generating a 2048 bit RSA private key"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": ".............+++"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "................[    3.209007] cfg80211: Calling CRDA to update world regulatory domain"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "...............................................[    6.359402] cfg80211: Calling CRDA to update world regulatory domain"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "..............................................[    9.508998] cfg80211: Calling CRDA to update world regulatory domain"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "..............................+++"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "writing new private key to '/tmp/server.key'"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "-----"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "+                                                         +"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "+                  Devconf write_data!!                   +"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "+                                                         +"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "SERVD: start service [LOGD]"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "\u0000[/etc/init.d/S21usbmount.sh]"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[/etc/init.d/S22mydlink.sh]"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[/etc/init.d/S22mydlink.sh] cannot get lanmac"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[/etc/init.d/S23udevd.sh]"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[/etc/init.d/S45gpiod.sh]"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[/etc/init.d/rcS] done!"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "Factory reset time : 5 secs"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "00: WPS Button using GPIO #7, input mode."}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "01: Factory Reset Button using GPIO #11, input mode."}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "02: Power_Status LED Green using GPIO #2, output mode."}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "03: Power_Status LED Orange using GPIO #0, output mode."}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "04: Internet LED Orange using GPIO #1, output mode."}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "05: Internet LED Green using GPIO #3, output mode."}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "06: USB2.0 using GPIO #9, output mode."}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "07: USB3.0 using GPIO #10, output mode."}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "08: USB2.0 LED Green using GPIO #15, output mode."}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "09: USB3.0 LED Green using GPIO #8, output mode."}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "10: WIFI 2.4G LED Green using GPIO #13, output mode."}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "11: WIFI 5G LED Green using GPIO #14, output mode."}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "et interface not found"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "[/etc/init0.d/S21layout.sh]: start ..."}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "SERVD: event [WANPORT.LINKDOWN] not found!"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: boot_wait = \"off\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_lock: Triggering NVRAM initialization!"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_init: Initializing NVRAM..."}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 41016064"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "\u0000sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set_default_builtin: Setting built-in default values!"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: console_loglevel = \"7\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: restore_defaults = \"1\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: sku_name = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wla_wlanstate = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: lan_if = \"br0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: lan_ipaddr = \"192.168.0.50\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: lan_bipaddr = \"192.168.0.255\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: lan_netmask = \"255.255.255.0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: time_zone = \"EST5EDT\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wan_hwaddr_def = \"01:23:45:67:89:ab\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wan_ifname = \"eth0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: lan_ifnames = \"eth1 eth2 eth3 eth4\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: ethConver = \"1\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: lan_proto = \"dhcp\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wan_ipaddr = \"0.0.0.0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wan_netmask = \"255.255.255.0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wanif = \"eth0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: time_zone_x = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: rip_multicast = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: bs_trustedip_enable = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: pci/1/0/vendid = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set_default: Loading built-in default values = 1!"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set_default: Checking for symbol \"router_defaults\"..."}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: os_name = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: os_version = \"6.37.14.56\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: os_date = \"Feb  8 2018\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_version = \"6.37.14.56 (r428735)\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: nvram_version = \"1\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: timer_interval = \"3600\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: ntp_server = \"192.5.41.40 192.5.41.41 133.100.9.2\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: time_zone = \"PST8PDT\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: log_level = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: upnp_enable = \"1\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: ezc_enable = \"1\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: ezc_version = \"2\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: is_default = \"1\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: os_server = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: stats_server = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: console_loglevel = \"1\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: router_disable = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: ure_disable = \"1\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: fw_disable = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: log_ipaddr = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: lan_ifname = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: lan_ifnames = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: lan_hwnames = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: lan_hwaddr = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: lan_dhcp = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: lan_ipaddr = \"192.168.1.1\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: lan_netmask = \"255.255.255.0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: lan_gateway = \"192.168.1.1\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: lan_proto = \"dhcp\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: lan_wins = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: lan_domain = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: lan_lease = \"86400\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: lan_stp = \"1\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: lan_route = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: lan1_ifname = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: lan1_ifnames = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: lan1_hwnames = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: lan1_hwaddr = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: lan1_dhcp = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: lan1_ipaddr = \"192.168.2.1\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: lan1_netmask = \"255.255.255.0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: lan1_gateway = \"192.168.2.1\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: lan1_proto = \"dhcp\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: lan1_wins = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: lan1_domain = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: lan1_lease = \"86400\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: lan1_stp = \"1\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: lan1_route = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wan_ifname = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wan_ifnames = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wan_hwname = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wan_hwaddr = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wan_proto = \"dhcp\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wan_ipaddr = \"0.0.0.0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wan_netmask = \"0.0.0.0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wan_gateway = \"0.0.0.0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wan_dns = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wan_wins = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wan_hostname = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wan_domain = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wan_lease = \"86400\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wan_pppoe_ifname = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wan_pppoe_username = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wan_pppoe_passwd = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wan_pppoe_idletime = \"60\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wan_pppoe_keepalive = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wan_pppoe_demand = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wan_pppoe_mru = \"1492\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wan_pppoe_mtu = \"1492\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wan_pppoe_service = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wan_pppoe_ac = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wan_desc = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wan_route = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wan_primary = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wan_unit = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: filter_maclist = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: filter_macmode = \"deny\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: filter_client0 = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: nat_type = \"sym\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: dmz_ipaddr = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: forward_port0 = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: autofw_port0 = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: dhcp_start = \"192.168.1.100\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: dhcp_end = \"192.168.1.150\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: dhcp1_start = \"192.168.2.100\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: dhcp1_end = \"192.168.2.150\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: dhcp_domain = \"wan\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: dhcp_wins = \"wan\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: http_username = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: http_passwd = \"admin\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: http_wanport = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: http_lanport = \"80\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_ifname = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_hwaddr = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_phytype = \"b\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_corerev = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_phytypes = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_radioids = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_ssid = \"Broadcom\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_bss_enabled = \"1\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_country_code = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_country_rev = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_radio = \"1\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_closed = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_ap_isolate = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_wmf_bss_enable = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_mcast_regen_bss_enable = \"1\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_bss_opmode_cap_reqd = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_rxchain_pwrsave_enable = \"1\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_rxchain_pwrsave_quiet_time = \"1800\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_rxchain_pwrsave_pps = \"10\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_rxchain_pwrsave_stas_assoc_check = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_radio_pwrsave_enable = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_radio_pwrsave_quiet_time = \"1800\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_radio_pwrsave_pps = \"10\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_radio_pwrsave_level = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_radio_pwrsave_stas_assoc_check = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_mode = \"ap\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_lazywds = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_wds = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_wds_timeout = \"1\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_wep = \"disabled\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_auth = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_key = \"1\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_key1 = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_key2 = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_key3 = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_key4 = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_maclist = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_macmode = \"disabled\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_assoc_retry_max = \"3\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_chanspec = \"11\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_reg_mode = \"off\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_rate = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_mrate = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_frameburst = \"off\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: frameburst_dyn = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_rateset = \"default\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_frag = \"2346\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_rts = \"2347\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_dtim = \"3\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_bcn = \"100\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_bcn_rotate = \"1\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_plcphdr = \"long\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_gmode = \"1\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_gmode_protection = \"auto\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_wme = \"auto\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_wme_bss_disable = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_antdiv = \"-1\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_infra = \"1\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_bw_cap = \"1\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_nband = \"2\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_nmcsidx = \"-1\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_nmode = \"-1\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_rifs_advert = \"auto\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_vlan_prio_mode = \"off\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_leddc = \"0x640000\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_rxstreams = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_txstreams = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_stbc_tx = \"auto\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_stbc_rx = \"1\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_ampdu = \"auto\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_ampdu_rtylimit_tid = \"5 5 5 5 5 5 5 5\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_ampdu_rr_rtylimit_tid = \"2 2 2 2 2 2 2 2\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_amsdu = \"auto\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_rx_amsdu_in_ampdu = \"auto\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_obss_coex = \"1\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_auth_mode = \"none\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_wpa_psk = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_wpa_gtk_rekey = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_radius_ipaddr = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_radius_key = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_radius_port = \"1812\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_crypto = \"tkip+aes\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_net_reauth = \"36000\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_akm = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_psr_mrpt = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: ses_enable = \"1\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: ses_event = \"2\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: ses_wds_mode = \"1\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: ses_cl_enable = \"1\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: ses_cl_event = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wps_version2 = \"enabled\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_wps_mode = \"enabled\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_wps_config_state = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wps_device_pin = \"12345670\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wps_modelname = \"Broadcom\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wps_mfstring = \"Broadcom\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wps_device_name = \"BroadcomAP\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_wps_reg = \"enabled\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wps_sta_pin = \"00000000\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wps_modelnum = \"123456\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wps_wer_mode = \"allow\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: lan_wps_oob = \"enabled\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: lan_wps_reg = \"enabled\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: lan1_wps_oob = \"enabled\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: lan1_wps_reg = \"enabled\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_wfi_enable = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_wfi_pinmode = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_wme_sta_be = \"15 1023 3 0 0 off off\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_wme_sta_bk = \"15 1023 7 0 0 off off\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_wme_sta_vi = \"7 15 2 6016 3008 off off\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_wme_sta_vo = \"3 7 2 3264 1504 off off\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369[   12.378403] random: nonblocking pool is initialized"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_wme_ap_be = \"15 63 3 0 0 off off\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_wme_ap_bk = \"15 1023 7 0 0 off off\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_wme_ap_vi = \"7 15 1 6016 3008 off off\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_wme_ap_vo = \"3 7 1 3264 1504 off off\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_wme_no_ack = \"off\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_wme_apsd = \"on\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_maxassoc = \"128\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_bss_maxassoc = \"128\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_unit = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_sta_retry_time = \"5\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: emf_entry = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: emf_uffp_entry = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: emf_rtport_entry = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: emf_enable = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: restore_defaults = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: acs_ifnames = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: igmp_enable = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_wet_tunnel = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: dpsta_ifnames = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: dpsta_policy = \"1\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: dpsta_lan_uif = \"1\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_wmf_ucigmp_query = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_wmf_mdata_sendup = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_wmf_ucast_upnp = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_wmf_igmpq_filter = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_txbf_bfr_cap = \"1\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_txbf_bfe_cap = \"1\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_acs_fcs_mode = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_dcs_csa_unicast = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_acs_excl_chans = \"\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_acs_dfs = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_acs_dfsr_immediate = \"300 3\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_acs_dfsr_deferred = \"604800 5\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_acs_dfsr_activity = \"30 10240\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_acs_cs_scan_timer = \"900\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_acs_ci_scan_timer = \"4\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_acs_ci_scan_timeout = \"300\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_acs_scan_entry_expire = \"3600\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_acs_tx_idle_cnt = \"0\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_acs_chan_dwell_time = \"70\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_acs_chan_flop_period = \"70\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "nvram_set: wl_intfer_period = \"1\""}
+{"firmware": "iot_dir880l_110b01", "timestamp": "04:50:02", "label": "Nothing", "message": "sem_get: Key: 410f0369"}
