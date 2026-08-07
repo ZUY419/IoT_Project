@@ -118,7 +118,7 @@ def search_and_analyze(query, index, metadata, max_ignore=5, max_matches=5):
         stop_reason = None
         if ignore_time["time"] >= max_ignore:
             stop_reason = "Reason: Status is IGNORED for five times !"
-        elif len(match_cve) >= max_match:
+        elif len(match_cve) >= max_matches:
             stop_reason = "Reason: Already match five CVE !"
 
         # 2. 如果需要停止，執行統一的輸出與 break

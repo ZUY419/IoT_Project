@@ -3,3 +3,4 @@ python-dotenv
 faiss-cpu
 requests
 ollama
+Flask
