@@ -1,0 +1,100 @@
+
+services:
+  # MQTT Broker
+  mqtt_broker:
+    image: eclipse-mosquitto:latest
+    container_name: mqtt_broker
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/config:/mosquitto/config
+
+  # Node-RED
+  iot_logic:
+    image: nodered/node-red:latest
+    container_name: iot_logic
+    ports:
+      - "1880:1880"
+    volumes:
+      - ./nodered/data:/data
+    depends_on:
+      - mqtt_broker
+      - db
+
+  # 資料庫（MongoDB）
+  db:
+    image: mongo:latest
+    container_name: mongo_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./mongo/data:/data/db
+      
+  # Ollama
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    networks:                  
+      - iot_bridge
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./ai/ollama:/root/.ollama
+
+  # LangChain AI Agent
+  ai_agent:
+    build: ./ai/langchain
+    container_name: ai_agent
+    environment:
+      - PENTEST_TARGET=192.168.0.1
+      - OLLAMA_HOST=http://ollama:11434
+    networks:
+      - iot_bridge         
+    volumes:
+      - ./ai/langchain:/app
+    working_dir: /app
+    command: python main.py
+    depends_on:
+      - ollama
+      - db
+      - mqtt_broker
+  
+  # RAG
+  rag-ollama:
+    image: ollama/ollama:latest
+    container_name: RAG-ollama
+    ports:
+      - "11435:11434"
+    cpus: 2
+    mem_limit: 4g
+    environment:
+      - OLLAMA_NUM_PARALLEL=2  
+    networks:
+      - iot_bridge         
+    volumes:
+      - ./RAG/ollama:/root/.ollama
+  
+  # 2. RAG Python 
+  rag:
+    build: ./RAG                     
+    container_name: RAG
+    depends_on:
+      - rag-ollama
+    working_dir: /app
+    tty: true
+    stdin_open: true
+    cpus: 2
+    mem_limit: 4g
+    environment:
+      - OMP_NUM_THREADS=1           
+      - MKL_NUM_THREADS=1           
+      - OLLAMA_HOST=http://RAG-ollama:11434  
+    networks:                       
+      - iot_bridge
+    volumes:
+      - ./RAG:/app                   
+networks:
+    iot_bridge:
+      name: iot_bridge 
+      external: true
