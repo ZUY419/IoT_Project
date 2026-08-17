@@ -1,35 +1,35 @@
 
 services:
   # MQTT Broker
-  mqtt_broker:
-    image: eclipse-mosquitto:latest
-    container_name: mqtt_broker
-    ports:
-      - "1883:1883"
-    volumes:
-      - ./mosquitto/data:/mosquitto/data
-      - ./mosquitto/config:/mosquitto/config
+  # mqtt_broker:
+  #   image: eclipse-mosquitto:latest
+  #   container_name: mqtt_broker
+  #   ports:
+  #     - "1883:1883"
+  #   volumes:
+  #     - ./mosquitto/data:/mosquitto/data
+  #     - ./mosquitto/config:/mosquitto/config
 
-  # Node-RED
-  iot_logic:
-    image: nodered/node-red:latest
-    container_name: iot_logic
-    ports:
-      - "1880:1880"
-    volumes:
-      - ./nodered/data:/data
-    depends_on:
-      - mqtt_broker
-      - db
+  # # Node-RED
+  # iot_logic:
+  #   image: nodered/node-red:latest
+  #   container_name: iot_logic
+  #   ports:
+  #     - "1880:1880"
+  #   volumes:
+  #     - ./nodered/data:/data
+  #   depends_on:
+  #     - mqtt_broker
+  #     - db
 
-  # 資料庫（MongoDB）
-  db:
-    image: mongo:latest
-    container_name: mongo_db
-    ports:
-      - "27017:27017"
-    volumes:
-      - ./mongo/data:/data/db
+  # # 資料庫（MongoDB）
+  # db:
+  #   image: mongo:latest
+  #   container_name: mongo_db
+  #   ports:
+  #     - "27017:27017"
+  #   volumes:
+  #     - ./mongo/data:/data/db
       
   # Ollama
   ollama:
@@ -53,12 +53,13 @@ services:
       - iot_bridge         
     volumes:
       - ./ai/langchain:/app
+      - /var/run/docker.sock:/var/run/docker.sock  # 👈 關鍵：讓容器內部可以呼叫外部 Docker 引擎
     working_dir: /app
     command: python main.py
     depends_on:
       - ollama
-      - db
-      - mqtt_broker
+      # - db
+      # - mqtt_broker
   
   # RAG
   rag-ollama:
@@ -86,8 +87,6 @@ services:
     stdin_open: true
     cpus: 2
     mem_limit: 4g
-    ports:
-      - "8000:8000"
     environment:
       - OMP_NUM_THREADS=1           
       - MKL_NUM_THREADS=1           
@@ -95,8 +94,7 @@ services:
     networks:                       
       - iot_bridge
     volumes:
-      - ./RAG:/app       
-    command: python3 server.py            
+      - ./RAG:/app                   
 networks:
     iot_bridge:
       name: iot_bridge 
