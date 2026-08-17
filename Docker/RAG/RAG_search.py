@@ -8,9 +8,10 @@ import re
 from pathlib import Path
 import textwrap
 import os
+import argparse
+from datetime import datetime
 
 # --- Configuration ---
-# 請確認這些路徑與你的實際目錄結構一致
 BASE_DIR = Path(__file__).resolve().parent
 VECTOR_DIR = BASE_DIR / "Vector_DB"
 CVES_DIR = BASE_DIR / "Data" / "Normalization CVES"
@@ -25,29 +26,15 @@ max_match = 5
 ollama_host = os.getenv("OLLAMA_HOST", "http://RAG-ollama:11434")
 client = ollama.Client(host=ollama_host)
 
-def format_text(text, indent_size=4):
-    """自動處理多行文字、換行並進行縮排，讓終端機輸出整齊"""
-    if isinstance(text, list):
-        text = " ".join(text)
-    elif not isinstance(text, str):
-        text = str(text)
-    
-    # 清理不必要的換行並合併
-    clean_text = text.replace("\n", " ").strip()
-    # 自動折行
-    return textwrap.indent(clean_text, " " * indent_size)
-
 def load_system():
     """載入 FAISS index 與 metadata"""
     if not INDEX_PATH.exists() or not METADATA_PATH.exists():
         print(f"[!] Error: Index files not found at {VECTOR_DIR}")
         sys.exit(1)
         
-    print(f"[+] Loading system files...")
     index = faiss.read_index(str(INDEX_PATH))
     with open(METADATA_PATH, "rb") as f:
         metadata = pickle.load(f)
-    print("[+] System loaded successfully.")
     return index, metadata
 
 def analyze_single_cve(query, cve_data):
@@ -62,15 +49,15 @@ def analyze_single_cve(query, cve_data):
     Task:
     1. Determine if this CVE is relevant to the user query.
     2. Output your answer STRICTLY as a JSON object:
-       {{
-           "relevant": true,
-           "reason": "Why it matches"
-       }}
-       or
-       {{
-           "relevant": false,
-           "reason": "Why it does not match"
-       }}
+        {{
+            "relevant": true,
+            "reason": "Why it matches"
+        }}
+        or
+        {{
+            "relevant": false,
+            "reason": "Why it does not match"
+        }}
     3. Do not include any text outside the JSON.
     """
     
@@ -81,7 +68,6 @@ def analyze_single_cve(query, cve_data):
         ])
         
         content = response['message']['content']
-        # 嘗試從回應中提取 JSON
         json_match = re.search(r'\{.*\}', content, re.DOTALL)
         if json_match:
             return json.loads(json_match.group())
@@ -92,7 +78,7 @@ def analyze_single_cve(query, cve_data):
         return {"relevant": False, "reason": f"AI error: {str(e)}"}
 
 def search_and_analyze(query, index, metadata, max_ignore=5, max_matches=5):
-    """執行向量搜尋與逐筆分析"""
+    """執行向量搜尋與逐筆分析，並回傳完整的 JSON 陣列"""
     # 1. Embedding
     try:
         query_emb = client.embed(model=EMBEDDING_MODEL, input=[query])["embeddings"][0]
@@ -100,40 +86,23 @@ def search_and_analyze(query, index, metadata, max_ignore=5, max_matches=5):
         faiss.normalize_L2(query_emb)
     except Exception as e:
         print(f"[!] Embedding error: {e}")
-        return
+        return []
 
     top_k = max_ignore * max_matches
 
     # 2. Search
     distances, indices = index.search(query_emb, top_k)
     
-    print(f"\n{'='*60}\n--- Processing Search Results (Top {top_k}) ---\n{'='*60}")
-    
     # 3. Process results
     match_cve = []
     ignore_time = {"time": 0, "status": "[IGNORED]"}
 
     for i in range(top_k):
-        # 1. 判斷停止原因
-        stop_reason = None
-        if ignore_time["time"] >= max_ignore:
-            stop_reason = "Reason: Status is IGNORED for five times !"
-        elif len(match_cve) >= max_matches:
-            stop_reason = "Reason: Already match five CVE !"
-
-        # 2. 如果需要停止，執行統一的輸出與 break
-        if stop_reason:
-            print(f"\n{'='*60}\n--- Finish for Analysising ---\n{'='*60}")
-            print(stop_reason)
-            # 使用 ' '.join(match_cve) 可以更漂亮地印出清單，不需寫 for 迴圈
-            if match_cve:
-                print(f"CVE ID list: {', '.join(match_cve)}")
-            else:
-                print("No CVEs found for your query.")
+        # 判斷停止原因
+        if ignore_time["time"] >= max_ignore or len(match_cve) >= max_match:
             break
 
         idx = indices[0][i]
-        score = distances[0][i]
         cve_id = metadata[idx]["cveID"]
         
         found_files = list(CVES_DIR.rglob(f"*{cve_id}*.json"))
@@ -141,55 +110,77 @@ def search_and_analyze(query, index, metadata, max_ignore=5, max_matches=5):
             with open(found_files[0], "r", encoding="utf-8") as f:
                 data = json.load(f)
                 
-                # 取得描述並確保它是字串
                 raw_desc = data.get("descriptions", "No description provided.")
+                if isinstance(raw_desc, list):
+                    raw_desc = " ".join(raw_desc)
+
                 cve_info = {
                     "cveID": cve_id,
                     "description": raw_desc
                 }
-
-                print(f"\n{'-'*30}")
-                print(f"Analysis {cve_id} (Score: {score:.4f})")
-                print(f"{'-'*30}", end=" ", flush=True)
                 
                 # AI 分析
                 result = analyze_single_cve(query, cve_info)
                 
-                # 視覺化輸出
-                status = "[MATCHED]" if result.get("relevant") else "[IGNORED]"
-                print(f"{status}", end=" ")
-                if status == "[MATCHED]":
-                    match_cve.append(cve_id)
+                if result.get("relevant"):
+                    # 提取 CWEs
+                    cwes = []
+                    for problem in data.get("problemTypes", []):
+                        desc_dict = problem.get("descriptions", {})
+                        if isinstance(desc_dict, dict):
+                            cwe_id_val = desc_dict.get("cweID")
+                            if cwe_id_val:
+                                cwes.append(cwe_id_val)
+
+                    # 從 metrics 提取 CVSS、Score、Severity
+                    base_score = ""
+                    severity = ""
+                    metrics_list = data.get("metrics", [])
+                    
+                    for item in metrics_list:
+                        if isinstance(item, dict):
+                            if "baseScore" in item:
+                                base_score = item.get("baseScore", "")
+                                severity = item.get("baseSeverity", "")
+                                break
+
+                    poc_list = data.get("PoC", [])
+                    pocs = []
+                    for poc in poc_list:
+                        poc_content = poc.get("poc", "")
+                        if poc_content:
+                            pocs.append(poc_content)
+
+                    match_cve.append(
+                        {
+                            "cve_id": cve_id,
+                            "service": "",
+                            "version": "",
+                            "port": "",
+                            "severity": severity,
+                            "score": base_score,
+                            "cvss": base_score,
+                            "cwes": cwes,
+                            "description": raw_desc,
+                            "PoC": pocs,
+                        }
+                    )
                     ignore_time["time"] = 0
-                    print(f"Matching Time = {len(match_cve)}")
                 else:
                     ignore_time["time"] += 1
-                    print(f"Ignore Time = {ignore_time['time']}", flush=True)
 
-                ignore_time["status"] = status
-                print(f"Reason:")
-                print(format_text(result.get("reason", "No reason provided.")))
-                print(f"Description:")
-                print(format_text(raw_desc))
-                print("PoC:")
-                PoC = data.get("PoC")
-                if PoC:
-                    for p in PoC:
-                        print(format_text(p))
-                else:
-                    print(format_text("No PoC !"))
-        else:
-            print(f"\n[!] {cve_id} -> [File not found]")
+    return match_cve
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("query", type=str, help="Search query")
+    args = parser.parse_args()
+
     index, metadata = load_system()
-    
-    print("[+] System Ready. Type 'exit' to quit.")
-    while True:
-        query = input("\nEnter search query: ").strip()
-        if query.lower() == 'exit':
-            break
-        if not query:
-            continue
-            
-        search_and_analyze(query, index, metadata)
+
+    # 執行搜尋並取得 Python 串列 (List of dicts)
+    results = search_and_analyze(args.query, index, metadata)
+
+    # 轉成合法的標準 JSON 字串並輸出
+    output_json = json.dumps(results, indent=4, ensure_ascii=False)
+    print(output_json)
