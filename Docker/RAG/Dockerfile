@@ -25,4 +25,4 @@ COPY . .
 
 # 4. 預設直接執行同學的 Python 腳本
 # (如果同學的主程式檔名不是 RAG_search.py，請將下方替換成他的實際檔名，例如 main.py)
-CMD ["python", "RAG_search.py"]
+CMD ["tail", "-f", "/dev/null"]
