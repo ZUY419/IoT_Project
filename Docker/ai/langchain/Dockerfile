@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     iputils-ping \
     curl \
     perl \
+    docker.io \
     && rm -rf /var/lib/apt/lists/*
 
 # 2. 這次真的換成 codeload 專用直鏈網址了，請不要變更它
@@ -31,3 +32,4 @@ RUN pip3 install --no-cache-dir packaging requests
 COPY . .
 
 CMD ["python", "main.py"]
+# CMD ["tail", "-f", "/dev/null"]
