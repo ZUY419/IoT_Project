@@ -217,16 +217,39 @@ class PentestToolbox:
         raw_log = "漏洞利用成功！取得管理者 Shell Log..."
         return raw_log
 
+    def search_rag_poc(self, query: str) -> str:
+        print(f"[🔍 Docker CLI RAG] 正在向 RAG 容器傳遞查詢: {query}")
+        try:
+            # 透過 docker exec 執行你剛寫好的 RAG 程式
+            docker_cmd = [
+                "docker", "exec", "-i", "RAG", 
+                "python3", "RAG_search.py", query
+            ]
+            
+            result = subprocess.run(
+                docker_cmd, 
+                stdout=subprocess.PIPE, 
+                stderr=subprocess.PIPE, 
+                text=True
+            )
+            
+            if result.returncode == 0:
+                return result.stdout.strip()
+            else:
+                return f"RAG Error: {result.stderr.strip()}"
+        except Exception as e:
+            return f"Failed to execute RAG container: {str(e)}"
+
 # ─────────────── (測試用) ───────────────
-#if __name__ == "__main__":
-    # 在這裡把你的韌體 IP 傳進去
+# if __name__ == "__main__":
+#     # 在這裡把你的韌體 IP 傳進去
 #    my_firmware_ip = "192.168.0.1"
     
-    # 建立工具箱實體
+#     # 建立工具箱實體
 #    toolbox = PentestToolbox(target_ip=my_firmware_ip)
     
-    # 測試執行 Nmap 看看能不能掃到 D-Link 韌體
-#    test_result = toolbox.run_nmap()
+#     # 測試執行 Nmap 看看能不能掃到 D-Link 韌體
+#    test_result = toolbox.run_RAG_search("Dlink")
     
 #    print("\n--- Nmap 掃描 D-Link 韌體的 Raw Log 如下 ---")
 #    print(test_result)

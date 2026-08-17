@@ -7,6 +7,7 @@ from task_tree import TaskTree
 import logging
 from dataclasses import dataclass, field
 from prompt import get_stage1_system_prompt, get_stage2_system_prompt, get_stage3_system_prompt
+import util
 
 ollama_client = get_ollama_client()
 logger = logging.getLogger(__name__)
@@ -151,7 +152,7 @@ class IoTPipelineOrchestrator:
         self.toolbox = toolbox
         self.task_tree = task_tree
         self.stage_results = []
-        self.current_state = "stage1_recon" 
+        self.current_state = "stage1_recon"
 
         # ==========================================
         # 🧠 跨階段共享記憶體 (結構化白板)
@@ -272,24 +273,53 @@ class IoTPipelineOrchestrator:
             log = self.toolbox.run_exploit_dlink()
             print("[+] 攻擊腳本執行完畢，已將回傳日誌回傳給大腦。")
 
+        elif action_name == "SEARCH_RAG_POC":
+            print("[🔍 實體工具呼叫] 正在向 RAG 資料庫檢索相關漏洞...")
+            print(f"\n[當前 Share Memory 資料]")
+            util.pretty_print_json(self.shared_memory)
+            query = self.shared_memory.get("rag_query", "")
+            print(query)
+            
+            if not query:
+                print("[Error] 獲取 RAG Query 失敗")
+            else:
+                log = self.toolbox.search_rag_poc(query)
+                try:
+                    # 💡 修正 1：用 json.loads() 解析字串
+                    if isinstance(log, str):
+                        cve_list = json.loads(log)
+                    else:
+                        cve_list = log  # 預防萬一本來就是 list/dict
+
+                    # 💡 修正 2：正確將結果更新回 shared_memory 內的 mapped_cves 或對應欄位
+                    for cve in cve_list:
+                        # 範例：如果想把找到的 CVE 塞進 mapped_cves 裡面
+                        if cve not in self.shared_memory["mapped_cves"]:
+                            self.shared_memory["mapped_cves"].append(cve)
+                except Exception as e:
+                    print(f"[SEARCH RAG POC ERROR] {e}")
+
         else:
             print("ℹ️ [Tool Executor] 當前無須執行實體工具，跳過工具呼叫，直接進入下一輪決策。")
             return "No tool executed."
 
         print("[+] ⏳ 啟動 IoT 設備冷卻保護，等待 3 秒鐘讓網路連線池復原...")
+
         time.sleep(3)
         return log
     
+    def _get_tool_history(self) -> list:
+        """從 stage_results 中萃取出所有使用過的工具名稱"""
+        return [res.action_name for res in self.stage_results if res.action_name and res.action_name != "NONE"]
+
     def _build_context(self) -> str:
         """
-        將『結構化記憶體』轉換為易讀的 Markdown 文字，
-        作為 system/user prompt 的前置脈絡 (Context) 餵給 AI。
+        將『結構化記憶體』與『已使用工具歷史』轉換為易讀的 Markdown 文字
         """
         context_lines = ["=== SYSTEM SHARED MEMORY (PAST KNOWLEDGE) ==="]
         
-        # 1. 注入已確定的服務與版本資訊 (對所有階段都有用)
+        # 1. 注入已確定的服務與版本資訊
         context_lines.append("[Discovered Services & Versions]:")
-        
         if self.shared_memory["discovered_services"]:
             for port, info in self.shared_memory["discovered_services"].items():
                 context_lines.append(
@@ -299,7 +329,17 @@ class IoTPipelineOrchestrator:
         else:
             context_lines.append("  - No verified services yet.")
             
-        # 2. 注入 Stage 2 比對出的 CVE 成果 (Stage 3 會極度需要)
+        # 2. 注入工具使用歷史（對應你的規則 10：ANTI-REPETITION）
+        tool_history = self._get_tool_history()
+        context_lines.append("\n[Recently Executed Tools / History]:")
+        if tool_history:
+            # 這裡可以運用前面提過的技巧，只取最近 3 個避免 Prompt 太長，或全數列出
+            recent_tools = tool_history[-3:]
+            context_lines.append(f"  - Recently used: {recent_tools}")
+        else:
+            context_lines.append("  - No tools executed yet.")
+
+        # 3. 注入 Stage 2 比對出的 CVE 成果
         if self.shared_memory["mapped_cves"]:
             context_lines.append("\n[Mapped Known Vulnerabilities (CVEs)]:")
             for cve in self.shared_memory["mapped_cves"]:
@@ -308,11 +348,11 @@ class IoTPipelineOrchestrator:
                     f"(CVSS: {cve['score']}) -> {cve.get('description', '')}"
                 )
 
-        # 3. 注入「失敗的嘗試」防呆（避免 AI 陷入瘋狂重試同一個 Exploit 的死迴圈）
+        # 4. 注入失敗的嘗試防呆
         if self.shared_memory["tried_exploits"]:
             context_lines.append("\n[🚨 Warning: Previously Failed Exploits - DO NOT RETRY THESE]:")
             for fail in self.shared_memory["tried_exploits"]:
-                context_lines.append(f"  - Exploit {fail['cve_id']} FAILED. Reason: {fail['reason']}")
+                context_lines.append(f"  - Exploit {fail['cve']} FAILED. Reason: {fail['reason']}")
 
         return "\n".join(context_lines)
 
@@ -411,5 +451,7 @@ if __name__ == "__main__":
     
     # 4. 🚀 啟動全自動智慧滲透流水線
     orchestrator.run_pipeline()
+
+    # orchestrator._execute_tool("SEARCH_RAG_POC")
     
     print("\n[+] 主程式安全退出。")
