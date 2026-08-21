@@ -1,5 +1,7 @@
 import json
 from datetime import datetime
+import os
+import re
 
 def pretty_print_json(data, indent=4):
     """
@@ -30,3 +32,48 @@ def pretty_print_json(data, indent=4):
     )
     
     print(formatted_str)
+
+def read_json(path):
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+def write_json(path, data):
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
+
+def get_current_folder_path():
+    """
+    取得目前腳本所在的絕對資料夾路徑
+    """
+    # 適用於一般 .py 執行檔或腳本
+    return os.path.dirname(os.path.abspath(__file__))
+
+def clean_version(version_str):
+    if not version_str:
+        return ""
+    # 如果版本字串裡包含了軟體名稱或多餘符號，可以用正規表達式抓出純數字與小數點（例如 "2.41" 或 "1.4.28"）
+    # 或是單純把常見的前綴、斜線取代掉
+    cleaned = version_str.replace("/", " ")
+    
+    # 嘗試用 Regex 抓出類似 x.y.z 的版號
+    match = re.search(r'(\d+(\.\d+)+[a-zA-Z0-9-]*)', cleaned)
+    if match:
+        return match.group(1)
+    
+    return version_str.strip()
+
+def remove_version(text):
+    if not text:
+        return ""
+    
+    # 1. 這裡用你原本抓版本號的 Regex 邏輯
+    # 它會抓出類似 2.41, 1.4.28, v1.0-beta 等版本號格式
+    version_pattern = r'(\d+(\.\d+)+[a-zA-Z0-9-]*)'
+    
+    # 2. 用 re.sub 把符合版本號的片段替換成空字串 ""
+    cleaned_text = re.sub(version_pattern, '', text)
+    
+    # 3. 清理多餘的空白字元與結尾符號
+    cleaned_text = cleaned_text.strip()
+    
+    return cleaned_text

@@ -1,4 +1,5 @@
 import json
+from tool_config import TOOL_DESCRIPTION
 
 # =============================================================================
 # Shared prompt fragments 
@@ -8,11 +9,18 @@ _IDENTITY = (
     "You are PentestGPT, an AI-powered automated penetration testing assistant specializing in IoT and firmware security."
 )
 
-_STAGE1_TOOLS = """TOOLS & CAPABILITIES (Stage 1: Reconnaissance & Enumeration Only):
+def _format_tools_from_config() -> str:
+    tool_descriptions = []
+    for tool in TOOL_DESCRIPTION:
+        name = tool.get("name")
+        desc = tool.get("description")
+        tool_descriptions.append(f"- {name}: {desc}")
+    return "\n".join(tool_descriptions)
+
+_STAGE1_TOOLS = """TOOLS & CAPABILITIES (Stage 1: Reconnaissance & Enumeration Only):
 You have access to information gathering and enumeration tools ONLY:
-- nmap, masscan - Port scanning, service enumeration, and protocol-specific auditing (supports -sT, -sU for UDP/DNS, and NSE scripts for version detection)
+- nmap, masscan - Port scanning, service enumeration, and protocol-specific auditing
 - gobuster, ffuf, dirb - Directory, file, and endpoint brute-forcing
-- nikto, wpscan - Passive Web and CMS vulnerability scanning and fingerprinting
 - curl, wget - HTTP/HTTPS banner grabbing, header analysis, and API endpoint discovery"""
 
 _STAGE3_TOOLS = """TOOLS & CAPABILITIES (Stage 3: Vulnerability Exploitation & Post-Exploitation):
@@ -29,28 +37,28 @@ _CRITICAL_RULES = """CRITICAL RULES FOR ACCURACY & MINDSET:
 3. ATTACKER MINDSET: You are a Red Team / Penetration Tester. Your 'recommended_next_steps' MUST be offensive, actionable commands or tool suggestions to find vulnerabilities. Do NOT provide defensive patching, password changing, or firewall advice.
 
 CRITICAL TRAFFIC REGULATION & FRAGILE PORT PROTECTION (ANTI-CRASH):
-8. WEBSERVER STABILITY GUARD: Web ports (e.g., HTTP 80, HTTPS 443) on embedded/IoT targets are extremely fragile and prone to service crashes. Your 'recommended_next_steps' MUST ABSOLUTELY AVOID high-frequency, noisy brute-force directory scanning or heavy automated vulnerability scans (such as running gobuster, dirb, or repetitive nikto) that will exhaustion connection backlogs.
-9. PRECISE EXPLOITATION ONLY: Active vulnerability exploitation is fully allowed and encouraged, but it MUST be executed via a single, precise, targeted payload (e.g., a one-shot exploit or custom PoC script). Do NOT poke, hammer, or flood the fragile web server with unnecessary probes. If a robust alternative service (like DNS Port 53) has high-severity, reliable CVEs available, prioritize exploiting that channel over the fragile web layer to maintain persistence.
+8. WEBSERVER STABILITY GUARD: Web ports (e.g., HTTP 80, HTTPS 443) on embedded/IoT targets are extremely fragile and prone to service crashes. Your 'recommended_next_steps' MUST ABSOLUTELY AVOID high-frequency, noisy brute-force directory scanning or heavy automated vulnerability scans (such as running heavy gobuster, dirb, or aggressive scans) that will exhaust connection backlogs.
+9. PRECISE EXPLOITATION ONLY: Active vulnerability exploitation is fully allowed and encouraged, but it MUST be executed via a single, precise, targeted payload (e.g., a one-shot exploit or custom PoC script). Do NOT poke, hammer, or flood the fragile web server with unnecessary probes. If a robust alternative service has high-severity, reliable CVEs available, prioritize exploring that channel.
 10. TOOL DIVERSITY & ANTI-REPETITION: Do NOT use the exact same tool or command sequence that was used in the immediately preceding turn for the same objective. If a tool was already executed on a target service, you MUST pivot to a different tool, a deeper manual script, a specific exploit module, or a different reconnaissance/exploitation angle to avoid redundant scans and ensure progressive coverage.
 
 CRITICAL STATE-KEEPING & MEMORY RULES (ANTI-AMNESIA):
 4. 'open_ports' and 'services' are CUMULATIVE fields. They MUST represent the entire history of the target across the timeline, NOT just the current turn.
 5. NEVER remove any previously discovered port from the 'open_ports' list or 'services' map. If port 53 or 80 was found in Turn 1, it MUST remain in 'open_ports' in Turn 2, Turn 3, and all future turns.
-6. The latest raw log may focus on only one port (e.g., Nikto log focuses only on port 80), but you MUST MERGE this new tool knowledge with the 'prior_context' to maintain a complete, unbroken asset inventory.
+6. The latest raw log may focus on only one port, but you MUST MERGE this new tool knowledge with the 'prior_context' to maintain a complete, unbroken asset inventory.
 7. If you violate this, drop any previously discovered port, or suffer from amnesia, the entire automation pipeline will crash immediately.
 """
 
 _FALLBACK_STRATEGIES = """WHEN STUCK - FALLBACK STRATEGIES FOR IOT RECON & EXPLOIT:
 If your current automated approach isn't returning explicit service versions or vulnerability matches, systematically pivot using these strategies:
 
-1. **Missing Web Server Version on Port 80/443?**
-   - Fallback: Immediately recommend "RUN_NIKTO" to grab raw HTTP headers, Server banners, and potential CGI management paths. Do not attempt blind exploitation.
+1. **Missing Web Server Version or Masked Banner (e.g., Server: WebServer)?**
+   - Fallback: Do not rely solely on basic banner grabbing. Ensure light-weight fingerprinting tools (like WhatWeb or targeted curl requests for HTML title / headers) have been utilized to uncover the real vendor (e.g., D-Link, Netgear) before attempting vulnerability mapping.
 
 2. **Web Main Page is Blank or Requires Authentication?**
-   - Fallback: Recommend "RUN_DIRSEARCH" to brute-force hidden paths (e.g., /cgi-bin/, /ws/, /sub_page/). IoT devices often hide vulnerability-prone endpoints behind standard login portals.
+   - Fallback: Recommend targeted endpoint checking via curl or low-impact directory probes to find hidden management scripts or configuration paths (e.g., /getcfg.php, /HNAP1/) without triggering anti-DoS protections.
 
 3. **Exploit Tool Fails or Timeout?**
-   - Fallback: Do not retry the same exploit blindly. Trigger "SEARCH_RAG_POC" to query an alternative CVE PoC script for the detected version, or re-verify alternative open ports.If all vectors fail, output "NONE" to terminate and document the negative result honestly.
+   - Fallback: Do not retry the same exploit blindly. Trigger "SEARCH_RAG_POC" to query an alternative CVE PoC script for the detected version, or re-verify alternative open ports. If all vectors fail, output "NONE" to terminate and document the negative result honestly.
 
 Remember: In real-world IoT pentesting, security patches might exist. If no vulnerability is confirmed after full enumeration, document the current security posture instead of hallucinating exploits."""
 
@@ -58,47 +66,53 @@ Remember: In real-world IoT pentesting, security patches might exist. If no vuln
 # Stage Prompt Constructors
 # =============================================================================
 
-def get_stage1_system_prompt() -> str:
-    """Build system prompt for Pentest Stage 1: Asset Identification."""
+# 2. **Clear Unknown Versions**: If any open port has an "unknown" version or service (e.g., Port 80 HTTP), use appropriate reconnaissance tools to perform deeper fingerprinting and banner grabbing.
+def get_stage1_system_prompt(self) -> str:
+    """Build dynamic system prompt for Stage 1 with fully dynamic JSON schema examples."""
+
+    # 1. 安全防呆：如果沒有傳入 orchestrator，給預設空值
+    if self is None:
+        target_ip = "192.168.0.1"
+        current_shared_memory = {"vendor": "unknown", "discovered_services": {"tcp": {}, "udp": {}}}
+    else:
+        target_ip = self.target_ip
+        current_shared_memory = self.shared_memory  # 注意這裡對應你class裡的拼字是 shared_memory
+
+    # 動態提取目前已知的 open ports 與 services 轉換成 Prompt 裡的範例格式
+    tcp_ports = list(current_shared_memory.get("discovered_services", {}).get("tcp", {}).keys())
+    services_dict = current_shared_memory.get("discovered_services", {}).get("tcp", {})
+    
+    # 如果還沒掃到任何東西，給個合理的初始提示；若有掃到就動態塞進去
+    example_services_json = json.dumps(services_dict, indent=4) if services_dict else "{\n    \"80\": { \"service\": \"http\", \"version\": \"unknown\", \"notes\": \"Discovered via port scan.\" }\n}"
+    example_ports_json = json.dumps([int(p) for p in tcp_ports]) if tcp_ports else "[80]"
+
     return f"""{_IDENTITY}
 
-STAGE: COMPREHENSIVE ASSET IDENTIFICATION 
+STAGE: COMPREHENSIVE ASSET IDENTIFICATION & PHASE DECISION
 
-Your goal is to perform a thorough reconnaissance and asset inventory of the target IoT device based on raw logs. 
-Completeness matters more than speed. Focus strictly on port discovery, service identification, and extracting precise version numbers.
-
-{_STAGE1_TOOLS}
+Your goal is to perform reconnaissance and decide whether asset discovery is **complete** or **requires further probing**.
 
 {_CRITICAL_RULES}
 
-{_FALLBACK_STRATEGIES}
-
-IMPORTANT INSTRUCTIONS FOR STAGE 1:
-1. **Identify Versions at All Costs**: Your primary goal is to extract specific service names and precise version numbers (e.g., "dnsmasq 2.41" instead of just "dnsmasq").
-2. **Clear Unknown Versions**: If any open port has an "unknown" version or service (e.g., Port 80 HTTP), use appropriate reconnaissance tools to perform deeper fingerprinting and banner grabbing.
+CRITICAL STAGE-TRANSITION & "UNKNOWN" SURRENDER RULES:
+1. **EXHAUSTION OVER PERFECTION**: Your goal is thoroughness, not perfection. If you have already executed available reconnaissance tools on an open port and the version is *still* masked or `unknown`, **do not loop infinitely**.
+2. **WHEN TO MARK COMPLETE (is_recon_completed: true)**: You are fully authorized to set `is_recon_completed` to `true` even if a port's version remains `unknown` as long as you have exhausted available tools.
 
 STRICT OUTPUT FORMAT CONSTRAINT:
-1. You MUST respond ONLY with a single valid JSON object.
-2. Do NOT write any introductory text, markdown explanations, or recommendations outside the JSON.
-3. Do NOT wrap the output in markdown code blocks like ```json or ```. Output raw JSON only!
+- Respond ONLY with a single valid JSON object. No markdown blocks (` ```json `), no explanations.
 
-REQUIRED JSON SCHEMA:
+REQUIRED JSON SCHEMA (Adapt this dynamically based on the target `{target_ip}`):
 {{
   "status": "success",
-  "target": "192.168.0.1",
+  "target": "{target_ip}",
   "stage1_status": {{
     "is_recon_completed": false, 
-    "reason": "Found HTTP service on port 80 with unknown version. Need to run Nikto for further web banner grabbing."
+    "reason": "Explain your decision here based on current findings."
   }},
-  "open_ports": [53, 80],
-  "services": {{
-    "53": {{ "service": "dnsmasq", "version": "2.41", "notes": "Exact DNS service and version identified." }},
-    "80": {{ "service": "http", "version": "unknown", "notes": "Web server detected, version hidden. Needs web fingerprinting." }}
-  }},
-  "web_applications": {{
-    "http://192.168.0.1": {{ "technology": "unknown", "framework": "unknown", "notes": "Pending web tech scan" }}
-  }},
-  "recommended_next_steps": ["RUN_NIKTO"]
+  "open_ports": {example_ports_json},
+  "services": {example_services_json},
+  "recommended_next_steps": [],
+  "recommended_next_steps_reason" = ""
 }}
 """
 

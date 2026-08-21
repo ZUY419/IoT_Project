@@ -13,6 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     perl \
     docker.io \
+    whatweb \
     && rm -rf /var/lib/apt/lists/*
 
 # 2. 這次真的換成 codeload 專用直鏈網址了，請不要變更它
