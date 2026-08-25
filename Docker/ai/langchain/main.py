@@ -235,7 +235,7 @@ class IoTPipelineOrchestrator:
             util.pretty_print_json(self.shared_memory)
             print("-" * 80)
 
-        max_turns = 5
+        max_turns = 12
         turn = 0
         
         while turn < max_turns:
@@ -310,122 +310,105 @@ class IoTPipelineOrchestrator:
             log = toolbox.nmap_scan_udp(target_ip=target_ip, ports=ports)
 
         elif action == "run_nvd_lookup":
-            protocol = arguments.get("protocol")
+            protocol = arguments.get("protocol", "").lower()
             port = str(arguments.get("port"))
+            
+            # 確保 UDP port 格式一致性 (例如將 "53" 轉為 "53/udp" 如果結構需要)
+            if protocol == "udp" and "/" not in port:
+                port = f"{port}/udp"
+                
             raw_service = arguments.get("service_name", "")
             raw_version = arguments.get("version", "")
 
-            # 2. 智慧分離產品名與版號
-            # 如果 version 裡面包含了空格（例如 "dnsmasq 2.41"），通常第一個字是產品，後面是版號
+            print(util.clean_version(raw_version))
+            if raw_version == "unknown" or (util.clean_version(raw_version) == ""):
+                if protocol in self.shared_memory.get("discovered_services", {}) and port in self.shared_memory["discovered_services"][protocol]:
+                    self.shared_memory["discovered_services"][protocol][port]["nvd_searched"] = True
+                return "NVD 工具找不到 CVE 資料"
+
+            # 智慧分離產品名與版號
             if " " in raw_version and not "windows" in raw_version.lower():
                 parts = raw_version.split()
-                service_name = parts[0]  # 例如 "dnsmasq"
-                if service_name == "":
-                    service_name = raw_service
-                version = parts[1]       # 例如 "2.41"
+                service_name = parts[0]
+                version = parts[1]
             else:
                 service_name = raw_service
-                # 用 regex 把版本號（如 2.41, 1.4.28）從 raw_version 中獨立抓出來
                 match = re.search(r'(\d+(\.\d+)+[a-zA-Z0-9-]*)', raw_version)
                 version = match.group(1) if match else raw_version
 
-            # 3. 防呆與查詢
+            # 安全取得目標資訊
             target_info = self.shared_memory.get("discovered_services", {}).get(protocol, {}).get(port, {})
 
             if target_info.get("nvd_searched", False):
                 log = f"⚠️ [系統提示] {protocol.upper()} Port {port} ({service_name}) 已經完成過 NVD 查詢！"
             else:
-                # 呼叫工具
+                print(service_name, version)
                 log = self.toolbox.run_nvd_lookup(service_name, version, port)
                 
-                # 🛡️ 安全地更新狀態（如果 target_info 存在就直接改它的屬性）
-                if target_info:
-                    target_info["nvd_searched"] = True
-                else:
-                    # 如果記憶體結構剛好缺這層，保險起見動態建立並標記
-                    if "discovered_services" not in self.shared_memory:
-                        self.shared_memory["discovered_services"] = {}
-                    if protocol not in self.shared_memory["discovered_services"]:
-                        self.shared_memory["discovered_services"][protocol] = {}
-                    if port not in self.shared_memory["discovered_services"][protocol]:
-                        self.shared_memory["discovered_services"][protocol][port] = {}
-                        
-                    self.shared_memory["discovered_services"][protocol][port]["nvd_searched"] = True
+                # 安全更新共用記憶體狀態
+                if "discovered_services" not in self.shared_memory:
+                    self.shared_memory["discovered_services"] = {}
+                if protocol not in self.shared_memory["discovered_services"]:
+                    self.shared_memory["discovered_services"][protocol] = {}
+                if port not in self.shared_memory["discovered_services"][protocol]:
+                    self.shared_memory["discovered_services"][protocol][port] = {}
+                    
+                self.shared_memory["discovered_services"][protocol][port]["nvd_searched"] = True
 
             print("-" * 80 + " Share Memory")
             util.pretty_print_json(self.shared_memory)
             print("-" * 80)
 
-            # # 1. 取得現有的 CVE 清單
-            # current_cves = self.shared_memory.get("mapped_cves", [])
-
-            # # 2. 假設 log 是 toolbox 回傳的結構化清單 (List[dict])
-            # # 如果你的 toolbox 回傳的是 Markdown 字串，請先用 regex 提取 CVE ID
-            # if isinstance(log, list):
-            #     new_cves = log
-            # else:
-            #     # 簡易處理：若 log 是字串，嘗試從中提取 CVE ID (如果是純字串列表)
-            #     import re
-            #     found_ids = re.findall(r'(CVE-\d{4}-\d{4,7})', log)
-            #     new_cves = [{"cve_id": cid} for cid in found_ids]
-
-            # # 3. 去重邏輯：只加入不在 current_cves 中的項目
-            # added_count = 0
-            # for new_item in new_cves:
-            #     # 統一取出 ID 進行比對
-            #     new_id = new_item.get("cve_id") or new_item.get("cveID")
-                
-            #     # 檢查是否已存在
-            #     is_duplicate = any(
-            #         (c.get("cve_id") == new_id or c.get("cveID") == new_id) 
-            #         for c in current_cves
-            #     )
-                
-            #     if not is_duplicate:
-            #         current_cves.append(new_item)
-            #         added_count += 1
-
-            # # 4. 更新回 shared_memory
-            # self.shared_memory["mapped_cves"] = current_cves
-            # print(f"[🛡️ 記憶體管理] 成功過濾重複，本次新增 {added_count} 個 CVE 到 mapped_cves。")
+            if not log:
+                log = "NVD 工具找不到 CVE 資料"
 
             return log
         
+        # ==========================================
+        # 工具 B：RAG PoC 檢索
+        # ==========================================
         elif action == "search_rag_poc":
             print("[🔍 實體工具呼叫] 正在向 RAG 資料庫檢索相關漏洞...")
             
-            # 💡 直接從 arguments 取得關鍵字
             query = arguments.get("query_keyword", "")
-            
             if not query:
                 return "Error: 無法取得查詢關鍵字 (query_keyword)"
 
-            # 更新記憶體中的查詢紀錄
             self.shared_memory["rag_query"] = query
             if "mapped_cves" not in self.shared_memory:
                 self.shared_memory["mapped_cves"] = []
 
-            # 執行工具
             raw_log = self.toolbox.search_rag_poc(query)
             
             try:
-                # 解析並更新 CVE 清單
                 cve_list = json.loads(raw_log) if isinstance(raw_log, str) else raw_log
+                
                 if isinstance(cve_list, list):
                     added = 0
                     for cve in cve_list:
+                        # 兼容 id 與 cve_id 兩種命名
                         cve_id = cve.get("id") or cve.get("cve_id")
-                        if cve_id and not any(item.get("id") == cve_id for item in self.shared_memory["mapped_cves"]):
-                            self.shared_memory["mapped_cves"].append(cve)
-                            added += 1
+                        
+                        if cve_id:
+                            cve["cve_id"] = cve_id
+                            
+                            # 🛡️ 雙向去重檢查（同時比對 cve_id 與 id，避免與 NVD 重複）
+                            is_duplicate = any(
+                                item.get("cve_id") == cve_id or item.get("id") == cve_id 
+                                for item in self.shared_memory["mapped_cves"]
+                            )
+                            
+                            if not is_duplicate:
+                                self.shared_memory["mapped_cves"].append(cve)
+                                added += 1
+                                
                     log = f"成功查詢並整合 {added} 個新漏洞資料。"
                 else:
                     log = str(raw_log)
+                    
             except Exception as e:
                 log = f"解析結果失敗: {str(e)}"
                 print(f"[SEARCH RAG POC ERROR] {log}")
-            
-            return log
         
         else:
             print("ℹ️ [Tool Executor] 當前無須執行實體工具，跳過工具呼叫，直接進入下一輪決策。")
@@ -623,6 +606,6 @@ if __name__ == "__main__":
     # 4. 🚀 啟動全自動智慧滲透流水線
     orchestrator.run_pipeline()
 
-    # orchestrator._execute_tool({'name': 'run_nvd_lookup', 'arguments': {'protocol': 'tcp', 'port': '53', 'service_name': 'domain', 'version': 'dnsmasq 2.41'}})
+    # orchestrator._execute_tool({'name': 'run_nvd_lookup', 'arguments': {'protocol': 'udp', 'port': '53', 'service_name': 'domain', 'version': 'Unbound'}})
     
     print("\n[+] 主程式安全退出。")

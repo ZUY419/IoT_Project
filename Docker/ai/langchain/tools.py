@@ -382,8 +382,6 @@ class PentestToolbox:
     def run_nvd_lookup(self, service, version, port):
         """
         NVD 漏洞自動批次查詢工具
-        :param discovered_services: 從共享記憶體中拿到的發現服務字典 (如 {"53": {"name": "dnsmasq", "version": "2.41", "nvd_searched": False}})
-        :return: 易於餵給 Stage 2 AI 的批次 Markdown 格式漏洞分析
         """
         print(f"[Toolbox] 啟動 NVD 漏洞批次過濾與查詢機制...")
         
@@ -391,18 +389,16 @@ class PentestToolbox:
             return "### [NVD 查詢結果]\n目前沒有任何已發現的服務資產，無法進行 NVD 查詢。"
         
         all_reports = []
-
         product_name = service
         target_version = version
         
-        # 防呆檢查
+        # 防呆檢查：版本無效時回傳提示字串，而不是直接 return (避免回傳 None)
         if not product_name or target_version.lower() == "unknown" or not target_version.strip():
-            return
+            return f"### [NVD 查詢略過]\n服務 {product_name} 的版本為未知或空值 ({target_version})，不進行 NVD 查詢。"
             
         print(f"[Toolbox] 發現未查詢資產 -> {product_name} ({target_version}) 正在連線 NVD...")
         
         try:
-            # 3. 呼叫核心 API
             vulnerability_list = get_nvd.get_vulnerability_data(product_name, target_version)
             
             output = []
@@ -411,56 +407,48 @@ class PentestToolbox:
             if not vulnerability_list:
                 output.append(f"- 在 NVD 中未發現任何與此版本直接相符的已知 CVE 漏洞。\n")
                 all_reports.append("\n".join(output))
-                return
-            
-            output.append(f"系統已自動過濾版本不符的雜訊，以下為該產品目前版本確實受影響的漏洞 (共 {len(vulnerability_list)} 個，已排序並限制前 5 個以防 Token 爆炸)：\n")
-            
-            # 依照 CVSS 分數由高到低排序
-            vulnerability_list.sort(key=lambda x: x.get("cvss", {}).get("score", 0.0) or 0.0, reverse=True)
-
-            # 4. 批次處理與記憶陣列（mapped_cves）同步寫入
-            for idx, item in enumerate(vulnerability_list[:5], start=1):
-                cve_id = item.get("cveID")
-                cvss_info = item.get("cvss", {})
-                score = cvss_info.get("score", 0.0) or 0.0
-                severity = cvss_info.get("severity", "UNKNOWN")
-                cwes = item.get("cwe", [])
-                desc = item.get("description", "無詳細描述。")
-
-                # 構造統一標準的 CVE 物件（存進系統內部狀態，保持資料完整）
-                cve_obj = {
-                    "cve_id": cve_id,
-                    "service": product_name,
-                    "version": target_version,
-                    "port": str(port),
-                    "severity": severity,
-                    "score": score,
-                    "cvss": score,
-                    "cwes": cwes,
-                    "description": desc,
-                    "summary": desc[:100] + "..." if len(desc) > 100 else desc, # 精簡版摘要
-                }
-
-                # 防止重複寫入 mapped_cves (比對 CVE ID 與 Port)
-                if not any(e.get("cve_id") == cve_id and str(e.get("port")) == str(port) for e in self.mapped_cves):
-                    self.mapped_cves.append(cve_obj)
-
-                # 精簡 Description 給 LLM 閱讀 (截斷前 100 個字元)
-                clean_desc = desc.replace("\n", " ")
-                short_desc = (clean_desc[:100] + "...") if len(clean_desc) > 100 else clean_desc
-
-                # 拼接極簡 Bullet Point 輸出給 LLM (省略 CPE, CVSS Vector, 重度 Markdown 標題)
-                cwe_str = f" [CWE: {', '.join(cwes)}]" if cwes else ""
-                output.append(f"- {cve_id} (Score: {score} {severity}){cwe_str}: {short_desc}")
-
-            output.append("") # 尾部留空行
+            else:
+                output.append(f"系統已自動過濾版本不符的雜訊，以下為該產品目前版本確實受影響的漏洞 (共 {len(vulnerability_list)} 個)：\n")
                 
-            all_reports.append("\n".join(output))
-            
+                # 依照 CVSS 分數由高到低排序
+                vulnerability_list.sort(key=lambda x: x.get("cvss", {}).get("score", 0.0) or 0.0, reverse=True)
+
+                for idx, item in enumerate(vulnerability_list[:3], start=1):
+                    cve_id = item.get("cveID")
+                    cvss_info = item.get("cvss", {})
+                    score = cvss_info.get("score", 0.0) or 0.0
+                    severity = cvss_info.get("severity", "UNKNOWN")
+                    cwes = item.get("cwe", [])
+                    desc = item.get("description", "無詳細描述。")
+
+                    cve_obj = {
+                        "cve_id": cve_id,
+                        "service": product_name,
+                        "version": target_version,
+                        "port": str(port),
+                        "severity": severity,
+                        "score": score,
+                        "cvss": score,
+                        "cwes": cwes,
+                        "description": desc,
+                        "summary": desc[:100] + "..." if len(desc) > 100 else desc,
+                    }
+
+                    if not any(e.get("cve_id") == cve_id and str(e.get("port")) == str(port) for e in self.mapped_cves):
+                        self.mapped_cves.append(cve_obj)
+
+                    clean_desc = desc.replace("\n", " ")
+                    short_desc = (clean_desc[:100] + "...") if len(clean_desc) > 100 else clean_desc
+                    cwe_str = f" [CWE: {', '.join(cwes)}]" if cwes else ""
+                    
+                    output.append(f"- {cve_id} (Score: {score} {severity}){cwe_str}: {short_desc}")
+
+                output.append("")
+                all_reports.append("\n".join(output))
+                
         except Exception as e:
             all_reports.append(f"### ❌ [NVD 查詢錯誤] 查詢 {product_name} ({target_version}) 時發生異常: {str(e)}")
         
-        # 5. 回傳最終整合報告
         if not all_reports:
             return "### [NVD 查詢結果]\n所有已知服務皆已完成過 NVD 歷史查詢，且目前無新資產資訊。"
             
