@@ -70,33 +70,77 @@ Remember: In real-world IoT pentesting, security patches might exist. If no vuln
 def get_stage1_system_prompt(self) -> str:
     """Build dynamic system prompt for Stage 1 with fully dynamic JSON schema examples."""
 
-    # 1. 安全防呆：如果沒有傳入 orchestrator，給預設空值
+    # 1. 安全防呆：如果沒有傳入 self，給預設空值
     if self is None:
         target_ip = "192.168.0.1"
-        current_shared_memory = {"vendor": "unknown", "discovered_services": {"tcp": {}, "udp": {}}}
+        current_shared_memory = {
+            "vendor": "unknown", 
+            "discovered_services": {"tcp": {}, "udp": {}}, 
+            "rag_search": [], 
+            "tried_exploits": []
+        }
     else:
-        target_ip = self.target_ip
-        current_shared_memory = self.shared_memory  # 注意這裡對應你class裡的拼字是 shared_memory
+        target_ip = getattr(self, "target_ip", "192.168.0.1")
+        current_shared_memory = getattr(self, "shared_memory", {})
 
-    # 動態提取目前已知的 open ports 與 services 轉換成 Prompt 裡的範例格式
-    tcp_ports = list(current_shared_memory.get("discovered_services", {}).get("tcp", {}).keys())
-    services_dict = current_shared_memory.get("discovered_services", {}).get("tcp", {})
+    # 2. 動態提取目前已知的服務資訊與歷史紀錄
+    discovered = current_shared_memory.get("discovered_services", {})
+    tcp_dict = discovered.get("tcp", {})
+    udp_dict = discovered.get("udp", {})
     
-    # 如果還沒掃到任何東西，給個合理的初始提示；若有掃到就動態塞進去
-    example_services_json = json.dumps(services_dict, indent=4) if services_dict else "{\n    \"80\": { \"service\": \"http\", \"version\": \"unknown\", \"notes\": \"Discovered via port scan.\" }\n}"
-    example_ports_json = json.dumps([int(p) for p in tcp_ports]) if tcp_ports else "[80]"
+    rag_searches = current_shared_memory.get("rag_search", [])
+    tried_exploits = current_shared_memory.get("tried_exploits", [])
+    
+    unique_rag_searches = list(set(rag_searches))
+    unique_tried_exploits = list(set(tried_exploits))
+    
+    rag_history_str = ", ".join(unique_rag_searches) if unique_rag_searches else "None"
+    exploit_history_str = ", ".join(unique_tried_exploits) if unique_tried_exploits else "None"
+    
+    # 3. 🛡️【安全防呆】安全地將 TCP 與 UDP 埠號轉為整數陣列（過濾掉非數字或 /udp 等雜訊）
+    tcp_ports = []
+    for p in tcp_dict.keys():
+        p_str = str(p).split('/')[0]
+        if p_str.isdigit():
+            tcp_ports.append(int(p_str))
+            
+    udp_ports = []
+    for p in udp_dict.keys():
+        p_str = str(p).split('/')[0]
+        if p_str.isdigit():
+            udp_ports.append(int(p_str))
 
-    return f"""{_IDENTITY}
+    # 4. 組裝成結構化的 open_port 字典與 services 範例
+    open_port_obj = {
+        "tcp": tcp_ports if tcp_ports else [80],
+        "udp": udp_ports if udp_ports else []
+    }
+    example_open_port_json = json.dumps(open_port_obj, indent=4)
+    
+    example_services_json = json.dumps(tcp_dict, indent=4) if tcp_dict else "{\n    \"80\": { \"service\": \"http\", \"version\": \"unknown\", \"notes\": \"Discovered via port scan.\" \n}"
+
+    # 支援的安全變數預設值（避免全域變數未定義時報錯）
+    identity_text = globals().get("_IDENTITY", "You are an autonomous cybersecurity reconnaissance agent.")
+    critical_rules_text = globals().get("_CRITICAL_RULES", "Execute tools step-by-step and avoid infinite loops.")
+
+    return f"""{identity_text}
 
 STAGE: COMPREHENSIVE ASSET IDENTIFICATION & PHASE DECISION
 
 Your goal is to perform reconnaissance and decide whether asset discovery is **complete** or **requires further probing**.
 
-{_CRITICAL_RULES}
+{critical_rules_text}
+
+---
+⚠️ **MEMORY & HISTORY TRACKING (CRITICAL - DO NOT REPEAT)**:
+- **Already Searched Keywords (RAG) [Do not search similar or duplicate queries]**: [{rag_history_str}]
+- **Already Tried Exploits**: [{exploit_history_str}]
+- **Rule**: If a keyword or exploit is already in the list above, **DO NOT SEARCH OR TRY IT AGAIN**. Move on to other unexplored components or mark discovery as complete if exhausted.
+---
 
 CRITICAL STAGE-TRANSITION & "UNKNOWN" SURRENDER RULES:
 1. **EXHAUSTION OVER PERFECTION**: Your goal is thoroughness, not perfection. If you have already executed available reconnaissance tools on an open port and the version is *still* masked or `unknown`, **do not loop infinitely**.
-2. **WHEN TO MARK COMPLETE (is_recon_completed: true)**: You are fully authorized to set `is_recon_completed` to `true` even if a port's version remains `unknown` as long as you have exhausted available tools.
+2. **WHEN TO MARK COMPLETE (is_recon_completed: true)**: You are fully authorized and **expected** to set `is_recon_completed` to `true` when all open ports/services have been processed or when further probing yields no new data. Once complete, return `"NONE"` in `recommended_next_steps`.
 
 STRICT OUTPUT FORMAT CONSTRAINT:
 - Respond ONLY with a single valid JSON object. No markdown blocks (` ```json `), no explanations.
@@ -109,10 +153,10 @@ REQUIRED JSON SCHEMA (Adapt this dynamically based on the target `{target_ip}`):
     "is_recon_completed": false, 
     "reason": "Explain your decision here based on current findings."
   }},
-  "open_ports": {example_ports_json},
+  "open_port": {example_open_port_json},
   "services": {example_services_json},
   "recommended_next_steps": [],
-  "recommended_next_steps_reason" = ""
+  "recommended_next_steps_reason": ""
 }}
 """
 

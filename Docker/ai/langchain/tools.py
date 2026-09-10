@@ -386,15 +386,15 @@ class PentestToolbox:
         print(f"[Toolbox] 啟動 NVD 漏洞批次過濾與查詢機制...")
         
         if not service or not version:
-            return "### [NVD 查詢結果]\n目前沒有任何已發現的服務資產，無法進行 NVD 查詢。"
+            return "### [NVD 查詢結果]\n目前沒有任何已發現的服務資產，無法進行 NVD 查詢。", []
         
         all_reports = []
+        newly_added_cves = []  # 收集這次呼叫新增加的 CVE 清單
         product_name = service
         target_version = version
         
-        # 防呆檢查：版本無效時回傳提示字串，而不是直接 return (避免回傳 None)
         if not product_name or target_version.lower() == "unknown" or not target_version.strip():
-            return f"### [NVD 查詢略過]\n服務 {product_name} 的版本為未知或空值 ({target_version})，不進行 NVD 查詢。"
+            return f"### [NVD 查詢略過]\n服務 {product_name} 的版本為未知或空值 ({target_version})，不進行 NVD 查詢。", []
             
         print(f"[Toolbox] 發現未查詢資產 -> {product_name} ({target_version}) 正在連線 NVD...")
         
@@ -410,7 +410,6 @@ class PentestToolbox:
             else:
                 output.append(f"系統已自動過濾版本不符的雜訊，以下為該產品目前版本確實受影響的漏洞 (共 {len(vulnerability_list)} 個)：\n")
                 
-                # 依照 CVSS 分數由高到低排序
                 vulnerability_list.sort(key=lambda x: x.get("cvss", {}).get("score", 0.0) or 0.0, reverse=True)
 
                 for idx, item in enumerate(vulnerability_list[:3], start=1):
@@ -434,8 +433,10 @@ class PentestToolbox:
                         "summary": desc[:100] + "..." if len(desc) > 100 else desc,
                     }
 
+                    # 去重並寫入，同時記錄到本次新增清單
                     if not any(e.get("cve_id") == cve_id and str(e.get("port")) == str(port) for e in self.mapped_cves):
                         self.mapped_cves.append(cve_obj)
+                        newly_added_cves.append(cve_obj)  # 👈 收集起來
 
                     clean_desc = desc.replace("\n", " ")
                     short_desc = (clean_desc[:100] + "...") if len(clean_desc) > 100 else clean_desc
@@ -450,9 +451,10 @@ class PentestToolbox:
             all_reports.append(f"### ❌ [NVD 查詢錯誤] 查詢 {product_name} ({target_version}) 時發生異常: {str(e)}")
         
         if not all_reports:
-            return "### [NVD 查詢結果]\n所有已知服務皆已完成過 NVD 歷史查詢，且目前無新資產資訊。"
+            return "### [NVD 查詢結果]\n所有已知服務皆已完成過 NVD 歷史查詢，且目前無新資產資訊。", []
             
-        return "\n\n---\n\n".join(all_reports)
+        report_str = "\n\n---\n\n".join(all_reports)
+        return report_str, newly_added_cves  # 👈 同時回傳字串與本次的 CVE 清單
             
     def run_dirbuster(self):
         """目錄爆破工具"""

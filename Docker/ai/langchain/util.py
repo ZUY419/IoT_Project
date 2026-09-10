@@ -2,6 +2,7 @@ import json
 from datetime import datetime
 import os
 import re
+from pathlib import Path
 
 def pretty_print_json(data, indent=4):
     """
@@ -33,13 +34,32 @@ def pretty_print_json(data, indent=4):
     
     print(formatted_str)
 
+def get_folder():
+    return Path(__file__).resolve().parent
+
 def read_json(path):
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
-
+    
 def write_json(path, data):
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
+    """
+    安全寫入 JSON 檔案的輔助函式
+    """
+    try:
+        # 確保目標資料夾存在，若不存在則自動建立
+        directory = os.path.dirname(path)
+        if directory and not os.path.exists(directory):
+            os.makedirs(directory, exist_ok=True)
+            
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
+            
+        print(f"[✏️ 檔案寫入成功] 資料已成功儲存至: {path}")
+        return True
+        
+    except Exception as e:
+        print(f"[❌ 檔案寫入失敗] 路徑 {path} 寫入異常: {str(e)}")
+        return False
 
 def get_current_folder_path():
     """
@@ -51,16 +71,19 @@ def get_current_folder_path():
 def clean_version(version_str):
     if not version_str:
         return ""
-    # 如果版本字串裡包含了軟體名稱或多餘符號，可以用正規表達式抓出純數字與小數點（例如 "2.41" 或 "1.4.28"）
-    # 或是單純把常見的前綴、斜線取代掉
+    
     cleaned = version_str.replace("/", " ")
     
-    # 嘗試用 Regex 抓出類似 x.y.z 的版號
+    # 嘗試抓出包含數字的版本號格式
     match = re.search(r'(\d+(\.\d+)+[a-zA-Z0-9-]*)', cleaned)
     if match:
-        return match.group(1)
-    
-    return version_str.strip()
+        result = match.group(1)
+        # 🛡️ 額外防呆：確保抓到的結果裡面真的包含數字，避免把純英文（如 "Unbound"）當作版號
+        if any(char.isdigit() for char in result):
+            return result
+            
+    # 如果沒有抓到帶數字的版號，直接回傳空字串！
+    return ""
 
 def remove_version(text):
     if not text:
@@ -77,3 +100,12 @@ def remove_version(text):
     cleaned_text = cleaned_text.strip()
     
     return cleaned_text
+
+folder = get_folder()
+share_memory_file = folder / "data" / "share memory" / "share memory.json"
+
+def print_and_write_share_momery(data):
+    print("-" * 80 + " Share Memory")
+    write_json(share_memory_file, data)
+    pretty_print_json(data)
+    print("-" * 80)

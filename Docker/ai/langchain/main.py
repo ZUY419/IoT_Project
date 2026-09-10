@@ -19,6 +19,9 @@ logger = logging.getLogger(__name__)
 
 import json
 
+folder = util.get_folder()
+share_memory_file = folder / "data" / "share memory" / "share memory.json"
+
 def ai_parsing_module(raw_log, prior_context="", orchestrator=None):
     """【Stage 1: 感知模組】分析最新 Nmap/掃描日誌，回傳標準化 JSON"""
     print("\n[感知模組 Stage 1] 正在叫 Qwen2.5-Coder 分析最新日誌...")
@@ -45,7 +48,6 @@ def ai_parsing_module(raw_log, prior_context="", orchestrator=None):
 {formatted_log_str}"""
     
     return _call_ollama_and_parse_json(system_prompt, user_content, "Stage 1")
-
 
 def ai_parsing_stage2(raw_log: str, prior_context: str = "") -> dict:
     """
@@ -108,14 +110,19 @@ def ai_parsing_stage3(raw_log, prior_context=""):
 def _call_ollama_and_parse_json(system_prompt, user_content, stage_name="LLM"):
     """發送請求給 Ollama，並利用 Regex 強制清洗出合法的 Python dict"""
     raw_reply = ""
+
+    share_memory_data = util.read_json(share_memory_file)
+    memory_str = json.dumps(share_memory_data, ensure_ascii=False, indent=2)
+
     try:
         response = ollama_client.chat(
             model=OLLAMA_MODEL,
-            messages=[
+            messages = [
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_content}
+                {"role": "user", "content": f"{user_content}\n\n--- 📂 Current Shared Memory State ---\n{memory_str}"}
             ],
             tools=TOOL_DESCRIPTION,
+            format="json",
             options={'temperature': 0.0}
         )
         raw_reply = response['message']['content'].strip()
@@ -172,70 +179,19 @@ class IoTPipelineOrchestrator:
             "tried_exploits": [],      # 格式: [{"cve": "CVE-2017-14491", "status": "FAILED", "reason": "Connection reset"}]
             "recon_completed": False
         }
+        
+        util.print_and_write_share_momery(self.shared_memory)
 
     def run_pipeline(self):
         print(f"\n[*] ─── 啟動門戶：IoT 非線性動態流水線 ───")
 
-        current_log = {"tcp": {}, "udp": {}}
-        
-        # 1. 執行初始資安偵察：掃描 TCP 與 UDP 埠口
-        print("[*] 執行初始資安偵察：掃描 TCP 與 UDP 埠口...")
-        tcp_results = toolbox.nmap_scan_tcp()
-        current_log["tcp"] = tcp_results
-        current_log["udp"] = toolbox.nmap_scan_udp()
+        state1_first = True
+        state2_first = True
+        state3_first = True
 
-        self.shared_memory["discovered_services"] = current_log
-
-        # 💡 智慧型自動觸發：如果 TCP 掃描發現了網頁埠 (80, 443 等)，自動執行 Nikto 抓取 Banner
-        web_ports_open = any(port in tcp_results for port in ["80", "443", "8080", "8443"])
-        if web_ports_open:
-            print("\n[+] ⚡️ [自動補償/智慧探針] 偵測到網頁服務埠開放，自動啟動 Nikto 安全探針...")
-            log = toolbox.run_nikto()
-
-            print("-" * 80 + " Nikto")
-            print(log)
-            print("-" * 80)
-            
-            # 1. 動態擷取 Nikto 掃描的實際目標埠號
-            port_match = re.search(r"Target Port:\s+(\d+)", log)
-            target_port = port_match.group(1) if port_match else "80"
-            
-            # 2. 即時解析 Nikto 抓到的 Banner 並同步至共用記憶體
-            banner_match = re.search(r"\+\s*Server:\s*([^\r\n]+)", log)
-            if banner_match:
-                server_full = banner_match.group(1).strip() # 例如抓到 "WebServer" 或 "lighttpd/1.4.28"
-                
-                # 進一步拆解名稱與版本
-                if "/" in server_full:
-                    product, version = server_full.split("/", 1)
-                else:
-                    product = server_full
-                    version = ""  # 如果沒有版號，就設為空字串，符合我們的統一規格！
-                
-                # 同步更新共用記憶體
-                self.shared_memory["discovered_services"]["tcp"][target_port] = {
-                    "name": product,
-                    "version": version
-                }
-                print(f"[+] [記憶體即時同步] Port {target_port} 已順利更新為產品: '{product}', 版本: '{version or '無'}'")
-            
-            # 💡 3. 【關鍵修正】把更新後的共用記憶體或 Nikto 日誌指定給 current_log
-            # 這樣進入 while 迴圈的第一輪決策時，AI 才能讀到最新的 Port 80 狀態！
-            current_log["tcp"] = self.shared_memory["discovered_services"]["tcp"]
-            print("-" * 80 + " Share Memory")
-            util.pretty_print_json(self.shared_memory)
-            print("-" * 80)
-
-        if self.shared_memory["discovered_services"]["tcp"].get("80", ""):
-            print("-" * 80 + " WhatWeb")
-            vendor = toolbox.run_whatweb()
-            if vendor:
-                self.shared_memory["vendor"] = vendor
-            print("-" * 80 + " Share Memory")
-            util.pretty_print_json(self.shared_memory)
-            print("-" * 80)
-
-        max_turns = 12
+        current_log = {}
+    
+        max_turns = 200
         turn = 0
         
         while turn < max_turns:
@@ -247,13 +203,16 @@ class IoTPipelineOrchestrator:
             
             # 2. 根據當前狀態派發給 AI 解析 Log
             if self.current_state == "stage1_recon":
+                if state1_first:
+                    current_log = self._state_one_fixed_process()
+                    state1_first = False
                 perception_result = ai_parsing_module(current_log, prior_context, orchestrator=self)
                 self._update_stage1_memory(perception_result)
                 
             elif self.current_state == "stage2_cve_mapping":
-                if "CVE-" not in current_log and "Vulnerabilities" not in current_log:
-                    print("  └─ 🔄 [自動補償] 當前 Log 未含 CVE 資料，立即呼叫 RUN_NVD_LOOKUP 實體工具...")
-                    current_log = self._execute_tool("RUN_NVD_LOOKUP")
+                # if "CVE-" not in current_log and "Vulnerabilities" not in current_log:
+                #     print("  └─ 🔄 [自動補償] 當前 Log 未含 CVE 資料，立即呼叫 RUN_NVD_LOOKUP 實體工具...")
+                #     current_log = self._execute_tool("RUN_NVD_LOOKUP")
                 perception_result = ai_parsing_stage2(current_log, prior_context)
                 self._update_stage2_memory(perception_result)
                 
@@ -265,7 +224,25 @@ class IoTPipelineOrchestrator:
             next_state = self.task_tree.update_from_perception(self.current_state, perception_result)
             
             # 取得 AI 建議的下一步行動
-            recommended_action = perception_result.get("recommended_next_steps", ["NONE"])[0]
+            # 1. 取得建議步驟清單，若沒有則給預設值
+            steps = perception_result.get("recommended_next_steps", [])
+
+            # 2. 如果清單有內容，就拿第一個；如果清單是空的，就給 "NONE"
+            recommended_action = steps[0] if len(steps) > 0 else {"name": "NONE", "arguments": {}}
+
+            # 💡【新增】擷取並印出 AI 的思考原因 (Reason)
+            if isinstance(perception_result, dict):
+                # 1. 抓取階段狀態的 Reason (例如 is_recon_completed 的理由)
+                stage_status = perception_result.get("stage1_status", {}) # 如果是 stage2/stage3 可以依此類推
+                if isinstance(stage_status, dict):
+                    stage_reason = stage_status.get("reason", "")
+                    if stage_reason:
+                        print(f"  └─ 💡 [階段評估原因] {stage_reason}")
+
+                # 2. 抓取下一步行動的 Reason
+                next_steps_reason = perception_result.get("recommended_next_steps_reason", "")
+                if next_steps_reason:
+                    print(f"  └─ 🎯 [決策行動原因] {next_steps_reason}")
             
             # 記錄本次決策
             self.stage_results.append(IoTStageResult(
@@ -289,19 +266,27 @@ class IoTPipelineOrchestrator:
             print(f"[🛠️ 執行行動] 當前階段: {self.current_state} -> 準備執行工具: {recommended_action}")
             execution_result = self._execute_tool(recommended_action)
             
+            # 🛡️【防呆修正】確保 execution_result 永遠是字串，避免 Tuple 串接錯誤
+            if isinstance(execution_result, tuple):
+                # 如果不小心拿到 tuple，通常第一個元素是 log 字串
+                execution_result = str(execution_result[0])
+            elif not isinstance(execution_result, str):
+                execution_result = str(execution_result)
+
             print("\n================ [工具執行回傳結果] ================")
             print(execution_result[:500] + ("..." if len(execution_result) > 500 else ""))
             print("==================================================\n")
             
             # 將本次執行的結果交給下一輪
             current_log = execution_result
-            util.pretty_print_json(self.shared_memory)
 
     def _execute_tool(self, action_name: str) -> str:
-        print(f"\n觸發工具 (原始輸入): {action_name}")
+        print(f"\nTrigger tool (raw input): {action_name}")
         action = action_name.get("name")
         arguments = action_name.get("arguments", {})  # 💡 確保安全取得 arguments 字典
 
+        self.shared_memory = util.read_json(share_memory_file)
+        
         log = ""
 
         if action == "nmap_scan_udp":
@@ -312,10 +297,6 @@ class IoTPipelineOrchestrator:
         elif action == "run_nvd_lookup":
             protocol = arguments.get("protocol", "").lower()
             port = str(arguments.get("port"))
-            
-            # 確保 UDP port 格式一致性 (例如將 "53" 轉為 "53/udp" 如果結構需要)
-            if protocol == "udp" and "/" not in port:
-                port = f"{port}/udp"
                 
             raw_service = arguments.get("service_name", "")
             raw_version = arguments.get("version", "")
@@ -324,57 +305,64 @@ class IoTPipelineOrchestrator:
             if raw_version == "unknown" or (util.clean_version(raw_version) == ""):
                 if protocol in self.shared_memory.get("discovered_services", {}) and port in self.shared_memory["discovered_services"][protocol]:
                     self.shared_memory["discovered_services"][protocol][port]["nvd_searched"] = True
-                return "NVD 工具找不到 CVE 資料"
-
-            # 智慧分離產品名與版號
-            if " " in raw_version and not "windows" in raw_version.lower():
-                parts = raw_version.split()
-                service_name = parts[0]
-                version = parts[1]
-            else:
-                service_name = raw_service
-                match = re.search(r'(\d+(\.\d+)+[a-zA-Z0-9-]*)', raw_version)
-                version = match.group(1) if match else raw_version
-
-            # 安全取得目標資訊
-            target_info = self.shared_memory.get("discovered_services", {}).get(protocol, {}).get(port, {})
-
-            if target_info.get("nvd_searched", False):
-                log = f"⚠️ [系統提示] {protocol.upper()} Port {port} ({service_name}) 已經完成過 NVD 查詢！"
-            else:
-                print(service_name, version)
-                log = self.toolbox.run_nvd_lookup(service_name, version, port)
+                log = "The NVD tool cannot find CVE data."
                 
-                # 安全更新共用記憶體狀態
-                if "discovered_services" not in self.shared_memory:
-                    self.shared_memory["discovered_services"] = {}
-                if protocol not in self.shared_memory["discovered_services"]:
-                    self.shared_memory["discovered_services"][protocol] = {}
-                if port not in self.shared_memory["discovered_services"][protocol]:
-                    self.shared_memory["discovered_services"][protocol][port] = {}
-                    
-                self.shared_memory["discovered_services"][protocol][port]["nvd_searched"] = True
+            else:
+                # 智慧分離產品名與版號
+                if " " in raw_version and not "windows" in raw_version.lower():
+                    parts = raw_version.split()
+                    service_name = parts[0]
+                    version = parts[1]
+                else:
+                    service_name = raw_service
+                    match = re.search(r'(\d+(\.\d+)+[a-zA-Z0-9-]*)', raw_version)
+                    version = match.group(1) if match else raw_version
 
-            print("-" * 80 + " Share Memory")
-            util.pretty_print_json(self.shared_memory)
-            print("-" * 80)
+                # 安全取得目標資訊
+                target_info = self.shared_memory.get("discovered_services", {}).get(protocol, {}).get(port, {})
+
+                if target_info.get("nvd_searched", False):
+                    log = f"⚠️ [System Notification] The NVD query for {protocol.upper()} Port {port} ({service_name}) has already been completed!"
+                else:
+                    print(service_name, version)
+                    
+                    # 🛡️ 【關鍵保險】確保 Toolbox 與共用記憶體的 CVE 清單是同一份
+                    if "mapped_cves" not in self.shared_memory:
+                        self.shared_memory["mapped_cves"] = []
+                    self.toolbox.mapped_cves = self.shared_memory["mapped_cves"]
+
+                    # 呼叫工具
+                    log = self.toolbox.run_nvd_lookup(service_name, version, port)
+                    
+                    # 安全更新共用記憶體狀態
+                    if "discovered_services" not in self.shared_memory:
+                        self.shared_memory["discovered_services"] = {}
+                    if protocol not in self.shared_memory["discovered_services"]:
+                        self.shared_memory["discovered_services"][protocol] = {}
+                    if port not in self.shared_memory["discovered_services"][protocol]:
+                        self.shared_memory["discovered_services"][protocol][port] = {}
+                        
+                    self.shared_memory["discovered_services"][protocol][port]["nvd_searched"] = True
+
+            util.print_and_write_share_momery(self.shared_memory)
 
             if not log:
-                log = "NVD 工具找不到 CVE 資料"
+                log = "The NVD tool cannot find CVE data."
 
             return log
         
-        # ==========================================
-        # 工具 B：RAG PoC 檢索
-        # ==========================================
         elif action == "search_rag_poc":
-            print("[🔍 實體工具呼叫] 正在向 RAG 資料庫檢索相關漏洞...")
+            print("[🔍 Entity Tool Call] Searching the RAG database for relevant vulnerabilities...")
             
             query = arguments.get("query_keyword", "")
             if not query:
-                return "Error: 無法取得查詢關鍵字 (query_keyword)"
+                return "Error: Unable to retrieve query keyword (query_keyword)"
 
-            self.shared_memory["rag_query"] = query
+            if not self.shared_memory.get("rag_search"):
+                self.shared_memory["rag_search"] = []
+
+            self.shared_memory["rag_search"].append(query)
+            
             if "mapped_cves" not in self.shared_memory:
                 self.shared_memory["mapped_cves"] = []
 
@@ -402,13 +390,22 @@ class IoTPipelineOrchestrator:
                                 self.shared_memory["mapped_cves"].append(cve)
                                 added += 1
                                 
-                    log = f"成功查詢並整合 {added} 個新漏洞資料。"
+                    log = f"Successfully retrieved and integrated {added} new vulnerability information."
                 else:
                     log = str(raw_log)
+
+                util.print_and_write_share_momery(self.shared_memory)
+
+                return log
                     
             except Exception as e:
-                log = f"解析結果失敗: {str(e)}"
+                log = f"Parsing result failed: {str(e)}"
                 print(f"[SEARCH RAG POC ERROR] {log}")
+
+        elif action == "NONE":
+            util.print_and_write_share_momery(self.shared_memory)
+
+            return "No tools available, forced transition to the next stage."
         
         else:
             print("ℹ️ [Tool Executor] 當前無須執行實體工具，跳過工具呼叫，直接進入下一輪決策。")
@@ -586,6 +583,101 @@ class IoTPipelineOrchestrator:
         # 可以在這裡寫寫入 MongoDB 的 Code
         pass
     
+    def _state_one_fixed_process(self):
+        print("=" * 80 + "State 1 固定流程")
+        current_log = {"tcp": {}, "udp": {}}
+                
+        # 1. 執行初始資安偵察：掃描 TCP 與 UDP 埠口
+        print("[*] 執行初始資安偵察：掃描 TCP 與 UDP 埠口...")
+        tcp_results = toolbox.nmap_scan_tcp()
+        current_log["tcp"] = tcp_results
+        current_log["udp"] = toolbox.nmap_scan_udp()
+
+        self.shared_memory["discovered_services"] = current_log
+
+        # 💡 智慧型自動觸發：如果 TCP 掃描發現了網頁埠 (80, 443 等)，自動執行 Nikto 抓取 Banner
+        web_ports_open = any(port in tcp_results for port in ["80", "443", "8080", "8443"])
+        if web_ports_open:
+            print("\n[+] ⚡️ [自動補償/智慧探針] 偵測到網頁服務埠開放，自動啟動 Nikto 安全探針...")
+            log = toolbox.run_nikto()
+
+            print("-" * 80 + " Nikto")
+            print(log)
+            print("-" * 80)
+            
+            # 1. 動態擷取 Nikto 掃描的實際目標埠號
+            port_match = re.search(r"Target Port:\s+(\d+)", log)
+            target_port = port_match.group(1) if port_match else "80"
+            
+            # 2. 即時解析 Nikto 抓到的 Banner 並同步至共用記憶體
+            banner_match = re.search(r"\+\s*Server:\s*([^\r\n]+)", log)
+            if banner_match:
+                server_full = banner_match.group(1).strip() # 例如抓到 "WebServer" 或 "lighttpd/1.4.28"
+                
+                # 進一步拆解名稱與版本
+                if "/" in server_full:
+                    product, version = server_full.split("/", 1)
+                else:
+                    product = server_full
+                    version = ""  # 如果沒有版號，就設為空字串，符合我們的統一規格！
+                
+                # 同步更新共用記憶體
+                self.shared_memory["discovered_services"]["tcp"][target_port] = {
+                    "name": product,
+                    "version": version
+                }
+                print(f"[+] [記憶體即時同步] Port {target_port} 已順利更新為產品: '{product}', 版本: '{version or '無'}'")
+            
+            # 💡 3. 【關鍵修正】把更新後的共用記憶體或 Nikto 日誌指定給 current_log
+            current_log["tcp"] = self.shared_memory["discovered_services"]["tcp"]
+            util.print_and_write_share_momery(self.shared_memory)
+
+        if self.shared_memory["discovered_services"]["tcp"].get("80", ""):
+            print("-" * 80 + " WhatWeb")
+            vendor = toolbox.run_whatweb()
+            if vendor:
+                self.shared_memory["vendor"] = vendor
+            util.print_and_write_share_momery(self.shared_memory)
+
+        # 批次處理 TCP 服務的 NVD 查詢
+        tcp_services = self.shared_memory.get("discovered_services", {}).get("tcp", {})
+        for port, data in tcp_services.items():
+            service_name = data.get("name")
+            version = data.get("version")
+
+            parameters = {
+                "name": "run_nvd_lookup",
+                "arguments": {
+                    "protocol": "tcp",
+                    "port": f"{port}",
+                    "service_name": f"{service_name}",
+                    "version": f"{version}"
+                }
+            }
+
+            self._execute_tool(parameters)
+
+        # 🛡️ 批次處理 UDP 服務的 NVD 查詢（自動過濾 unknown 版本，避免白跑）
+        udp_services = self.shared_memory.get("discovered_services", {}).get("udp", {})
+        for port, data in udp_services.items():
+            service_name = data.get("name")
+            version = data.get("version")
+
+            parameters = {
+                "name": "run_nvd_lookup",
+                "arguments": {
+                    "protocol": "udp",
+                    "port": f"{port}",
+                    "service_name": f"{service_name}",
+                    "version": f"{version}"
+                }
+            }
+
+            self._execute_tool(parameters)
+
+        print("=" * 80)
+        return current_log
+        
 if __name__ == "__main__":
     print("[*] 正在初始化 ai_agent 主程式 ...")
     
