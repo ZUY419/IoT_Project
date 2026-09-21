@@ -1,6 +1,7 @@
+version: '3.8'
 
 services:
-  # MQTT Broker
+  # MQTT Broker (目前註解保留)
   # mqtt_broker:
   #   image: eclipse-mosquitto:latest
   #   container_name: mqtt_broker
@@ -10,7 +11,7 @@ services:
   #     - ./mosquitto/data:/mosquitto/data
   #     - ./mosquitto/config:/mosquitto/config
 
-  # # Node-RED
+  # Node-RED (目前註解保留)
   # iot_logic:
   #   image: nodered/node-red:latest
   #   container_name: iot_logic
@@ -22,7 +23,7 @@ services:
   #     - mqtt_broker
   #     - db
 
-  # # 資料庫（MongoDB）
+  # 資料庫（MongoDB，目前註解保留）
   # db:
   #   image: mongo:latest
   #   container_name: mongo_db
@@ -31,7 +32,7 @@ services:
   #   volumes:
   #     - ./mongo/data:/data/db
       
-  # Ollama
+  # Ollama (給主 AI Agent 使用)
   ollama:
     image: ollama/ollama:latest
     container_name: ollama
@@ -41,6 +42,8 @@ services:
       - "11434:11434"
     volumes:
       - ./ai/ollama:/root/.ollama
+    environment:
+      - OLLAMA_KEEP_ALIVE=-1   # 👈 保持模型永遠常駐在記憶體中，免去重複載入的等待時間
 
   # LangChain AI Agent
   ai_agent:
@@ -48,12 +51,14 @@ services:
     container_name: ai_agent
     environment:
       - PENTEST_TARGET=192.168.0.1
+      - PENTEST_AUTHORIZED_TARGETS=192.168.0.1
       - OLLAMA_HOST=http://ollama:11434
     networks:
       - iot_bridge         
     volumes:
       - ./ai/langchain:/app
-      - /var/run/docker.sock:/var/run/docker.sock  # 👈 關鍵：讓容器內部可以呼叫外部 Docker 引擎
+      - /var/run/docker.sock:/var/run/docker.sock  # 讓容器內部可以呼叫外部 Docker 引擎
+      - ./ai/langchain/data:/app/data
     working_dir: /app
     command: python main.py
     depends_on:
@@ -61,7 +66,7 @@ services:
       # - db
       # - mqtt_broker
   
-  # RAG
+  # RAG Ollama
   rag-ollama:
     image: ollama/ollama:latest
     container_name: RAG-ollama
@@ -71,12 +76,13 @@ services:
     mem_limit: 4g
     environment:
       - OLLAMA_NUM_PARALLEL=2  
+      - OLLAMA_KEEP_ALIVE=-1   # 👈 RAG 的模型也設定常駐
     networks:
       - iot_bridge         
     volumes:
       - ./RAG/ollama:/root/.ollama
   
-  # 2. RAG Python 
+  # RAG Python 服務
   rag:
     build: ./RAG                     
     container_name: RAG
@@ -88,13 +94,14 @@ services:
     cpus: 2
     mem_limit: 4g
     environment:
-      - OMP_NUM_THREADS=1           
-      - MKL_NUM_THREADS=1           
+      - OMP_NUM_THREADS=1            
+      - MKL_NUM_THREADS=1            
       - OLLAMA_HOST=http://RAG-ollama:11434  
-    networks:                       
+    networks:
       - iot_bridge
     volumes:
-      - ./RAG:/app                   
+      - ./RAG:/app                     
+
 networks:
     iot_bridge:
       name: iot_bridge 
