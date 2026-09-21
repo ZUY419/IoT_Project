@@ -1,0 +1,293 @@
+{
+    "target IP": "192.168.0.1",
+    "vendor": "D-LINK SYSTEMS, INC. | WIRELESS ROUTER | HOME",
+    "discovered_services": {
+        "tcp": {
+            "53": {
+                "name": "domain",
+                "version": "dnsmasq 2.41",
+                "nvd_searched": true
+            },
+            "80": {
+                "name": "lighttpd",
+                "version": "1.4.28",
+                "nvd_searched": true
+            },
+            "32862": {
+                "name": "upnp",
+                "version": "MiniUPnP 1.4 (UPnP 1.0)",
+                "nvd_searched": true
+            }
+        },
+        "udp": {
+            "53": {
+                "name": "domain",
+                "version": "Unbound",
+                "nvd_searched": true
+            },
+            "67": {
+                "name": "dhcps",
+                "version": "unknown",
+                "nvd_searched": true
+            },
+            "69": {
+                "name": "tftp",
+                "version": "Windows 10 IoT tftpd",
+                "nvd_searched": true
+            },
+            "1900": {
+                "name": "upnp?",
+                "version": "unknown",
+                "nvd_searched": true
+            },
+            "5351": {
+                "name": "nat-pmp?",
+                "version": "unknown",
+                "nvd_searched": true
+            },
+            "161": {
+                "state": "closed/filtered",
+                "name": "unknown",
+                "version": "",
+                "nvd_searched": true
+            },
+            "5000": {
+                "state": "closed/filtered",
+                "name": "unknown",
+                "version": "",
+                "nvd_searched": true
+            }
+        }
+    },
+    "mapped_cves": [
+        {
+            "cve_id": "CVE-2017-14492",
+            "service": "dnsmasq",
+            "version": "2.41",
+            "port": "53",
+            "score": 9.8,
+            "status": "untested"
+        },
+        {
+            "cve_id": "CVE-2017-14493",
+            "service": "dnsmasq",
+            "version": "2.41",
+            "port": "53",
+            "score": 9.8,
+            "status": "untested"
+        },
+        {
+            "cve_id": "CVE-2017-14491",
+            "service": "dnsmasq",
+            "version": "2.41",
+            "port": "53",
+            "score": 9.8,
+            "status": "untested"
+        },
+        {
+            "cve_id": "CVE-2014-2323",
+            "service": "lighttpd",
+            "version": "1.4.28",
+            "port": "80",
+            "score": 9.8,
+            "status": "untested"
+        },
+        {
+            "cve_id": "CVE-2019-11072",
+            "service": "lighttpd",
+            "version": "1.4.28",
+            "port": "80",
+            "score": 9.8,
+            "status": "untested"
+        },
+        {
+            "cve_id": "CVE-2013-4559",
+            "service": "lighttpd",
+            "version": "1.4.28",
+            "port": "80",
+            "score": 7.6,
+            "status": "untested"
+        },
+        {
+            "cve_id": "CVE-2017-8798",
+            "service": "MiniUPnP",
+            "version": "1.4",
+            "port": "32862",
+            "score": 9.8,
+            "status": "untested"
+        },
+        {
+            "cve_id": "CVE-2017-1000494",
+            "service": "MiniUPnP",
+            "version": "1.4",
+            "port": "32862",
+            "score": 7.8,
+            "status": "untested"
+        },
+        {
+            "cve_id": "CVE-2019-12106",
+            "service": "MiniUPnP",
+            "version": "1.4",
+            "port": "32862",
+            "score": 7.5,
+            "status": "untested"
+        },
+        {
+            "cve_id": "CVE-2026-2291",
+            "service": "",
+            "version": "",
+            "port": "",
+            "severity": "",
+            "score": "",
+            "cvss": "",
+            "cwes": [],
+            "description": "dnsmasqs extract_name() function can be abused to cause a heap buffer overflow, allowing an attacker to inject false DNS cache entries, which could result in DNS lookups to redirect to an attacker-controlled IP address, or to cause a DoS.",
+            "PoC": []
+        },
+        {
+            "cve_id": "CVE-2026-12725",
+            "service": "",
+            "version": "",
+            "port": "",
+            "severity": "MEDIUM",
+            "score": 5.9,
+            "cvss": 5.9,
+            "cwes": [
+                "CWE-122"
+            ],
+            "description": "A heap-based buffer overflow was found in dnsmasq. When DNSSEC validation and\nquery logging are both enabled, logging of DS or DNSKEY replies containing\nunsupported algorithm or digest types can cause dnsmasq to write past the end\nof an internal logging buffer. A remote attacker able to supply such a DNS\nresponse may crash the dnsmasq process, resulting in denial of service.",
+            "PoC": []
+        },
+        {
+            "cve_id": "CVE-2026-5172",
+            "service": "",
+            "version": "",
+            "port": "",
+            "severity": "",
+            "score": "",
+            "cvss": "",
+            "cwes": [],
+            "description": "A buffer overflow in dnsmasq’s extract_addresses() function allows an attacker to trigger a heap out-of-bounds read and crash by exploiting a malformed DNS response, enabling extract_name() to advance the pointer past the record’s end.",
+            "PoC": []
+        }
+    ],
+    "tried_exploits": [],
+    "recon_completed": false,
+    "tool_history": [
+        {
+            "name": "nmap_scan_udp",
+            "arguments": {}
+        },
+        {
+            "name": "run_nikto",
+            "arguments": {}
+        },
+        {
+            "name": "run_whatweb",
+            "arguments": {}
+        },
+        {
+            "name": "run_nvd_lookup",
+            "arguments": {
+                "protocol": "tcp",
+                "port": "53",
+                "service_name": "domain",
+                "version": "dnsmasq 2.41"
+            }
+        },
+        {
+            "name": "run_nvd_lookup",
+            "arguments": {
+                "protocol": "tcp",
+                "port": "80",
+                "service_name": "lighttpd",
+                "version": "1.4.28"
+            }
+        },
+        {
+            "name": "run_nvd_lookup",
+            "arguments": {
+                "protocol": "tcp",
+                "port": "32862",
+                "service_name": "upnp",
+                "version": "MiniUPnP 1.4 (UPnP 1.0)"
+            }
+        },
+        {
+            "name": "run_nvd_lookup",
+            "arguments": {
+                "protocol": "udp",
+                "port": "53",
+                "service_name": "domain",
+                "version": "Unbound"
+            }
+        },
+        {
+            "name": "run_nvd_lookup",
+            "arguments": {
+                "protocol": "udp",
+                "port": "67",
+                "service_name": "dhcps",
+                "version": "unknown"
+            }
+        },
+        {
+            "name": "run_nvd_lookup",
+            "arguments": {
+                "protocol": "udp",
+                "port": "69",
+                "service_name": "tftp",
+                "version": "Windows 10 IoT tftpd"
+            }
+        },
+        {
+            "name": "run_nvd_lookup",
+            "arguments": {
+                "protocol": "udp",
+                "port": "1900",
+                "service_name": "upnp?",
+                "version": "unknown"
+            }
+        },
+        {
+            "name": "run_nvd_lookup",
+            "arguments": {
+                "protocol": "udp",
+                "port": "5351",
+                "service_name": "nat-pmp?",
+                "version": "unknown"
+            }
+        },
+        {
+            "name": "run_nvd_lookup",
+            "arguments": {
+                "protocol": "udp",
+                "port": "161",
+                "service_name": "unknown",
+                "version": ""
+            }
+        },
+        {
+            "name": "run_nvd_lookup",
+            "arguments": {
+                "protocol": "udp",
+                "port": "5000",
+                "service_name": "unknown",
+                "version": ""
+            }
+        },
+        {
+            "name": "search_rag_poc",
+            "arguments": {
+                "query": "dnsmasq 2.41"
+            }
+        },
+        {
+            "name": "NONE",
+            "arguments": {}
+        }
+    ],
+    "rag_search": [
+        "dnsmasq 2.41"
+    ]
+}
