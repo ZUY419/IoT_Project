@@ -1,0 +1,210 @@
+/* https://colorhunt.co/palette/fff8f0c085528c5a3c4b2e2b */
+/* https://colorhunt.co/palette/fff8f0c085528c5a3c4b2e2b */
+
+/* 網頁標題 */
+p, span, button {
+    font-family: "M PLUS Rounded 1c", Arial, sans-serif;
+    
+    padding: 0px 0px 0px 0px;
+    margin: 0px 0px 0px 0px;
+}
+
+body {
+    width: 100vw;       /* 佔滿整個視窗寬度 */
+    height: 100vh;      /* 佔滿整個視窗高度 */
+    
+    margin: 0;          /* 💥 關鍵：清除瀏覽器預設的 8px 邊距，防止溢出！ */
+    padding: 10px;      /* 如果希望頁面邊緣留有一點呼吸空間，可以加一點 padding */
+    
+    display: flex;
+    flex-direction: column;
+
+    background-color: #FFF8F0;
+    overflow: hidden;   /* 鎖死整個視窗，絕對不允許整頁出現卷軸，只有內部可以滾動 */
+}
+
+header {
+    flex: 1;
+
+    width: 99vw;
+    height: 10vh;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10;
+
+    background-color: #4B2E2B;
+    border-radius: 20px;
+    box-shadow: 4px 4px 10px 1px #8C5A3C;
+}
+
+.web_title {
+    /* top right bottom left */
+    padding: 0px 0px 0px 10px;
+
+    color: #C08552;
+    font-size: 50px;
+    font-weight: bold;
+}
+
+article {
+    flex: 9;
+}
+
+.info_block {
+    width: 99vw;
+    height: 85vh;
+
+    margin: 0px 0px 0px 0px;
+
+    border-radius: 20px;
+
+    background-color: #4B2E2B;
+    box-shadow: 4px 4px 10px 1px #8C5A3C;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.switch_show_buttons {
+    width: auto;
+    height: 8vh;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 95;
+}
+
+.switch_show_button {
+    width: auto;
+    height: 6vh;
+
+    margin: 0px 10px 0px 10px;
+    padding: 0px 8px 0px 8px;
+
+    border-radius: 15px;
+    border-color: transparent;
+
+    background-color: transparent;
+    color: #C08552;
+
+    font-size: 25px;
+    font-weight: normal;
+
+    transition: all 0.5s ease;
+}
+
+.switch_show_button:hover,
+.switch_show_button.action {
+    background-color: #8C5A3C;
+    color: #FFF8F0;
+
+    font-size: 35px;
+
+    transition: all 0.3s ease;
+}
+
+.pentest_state_button {
+    flex: 7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.info_show {
+    padding: 10px;
+    margin: 0px 10px 10px 10px;
+
+    background-color: #160908;
+
+    border-style: solid;
+    border-color: #C08552;
+    border-radius: 20px;
+    border-width: 3px;
+
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.info_title_block {
+    width: auto;
+    padding: 5px 10px;
+    
+    color: #FFF8F0;
+    
+    display: flex;
+    flex-direction: row;
+    align-items: end;
+    justify-content: space-between;
+    flex: 8;
+}
+
+.info_title {
+    width: 30vw;
+
+    display: flex;
+    flex-direction: row;
+    align-items: end;
+}
+
+.info_title_name {
+    font-size: 35px;
+
+    padding-right: 10px;
+}
+
+.info_title_data {
+    font-size: 20px;
+    padding-bottom: 5px;
+}
+
+.pentest_state {
+    font-size: 20px;
+}
+
+.info_show_block {
+    height: 65vh;
+
+    margin-top: 10px;
+
+    font-family: 'JetBrains Mono', monospace;
+    
+    overflow-y: auto; 
+}
+
+.device_selection_block {
+    margin: 10px 0px;
+    padding: 5px 10px;
+
+    background-color: #FFF8F0;
+    border-radius: 5px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.device_name {
+    color: #8C5A3C;
+    font-size: 25px;
+    font-weight: bold;
+}
+
+.device_button {
+    color: #2A835F;
+    font-size: 18px;
+    font-weight: bold;
+
+    background-color: transparent;
+    border-color: transparent;
+}
+
+.device_button:hover,
+.device_button.action {
+    color: #092328;
+
+    transition: all 0.5s ease;
+}
