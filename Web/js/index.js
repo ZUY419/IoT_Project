@@ -1,5 +1,6 @@
 // 記錄目前正在執行的設備名稱
 var started_device = "";
+var current_tab = "";
 
 // 顯示按鈕切換
 async function switch_button_state(clickedButton) {
@@ -26,6 +27,7 @@ async function switch_button_state(clickedButton) {
     info_title_name.textContent = "";
     info_title_data.textContent = "";
     pentest_state.textContent = "";
+    current_tab = buttonValue;
    
     if (buttonValue === "Shared Memory") {
         info_title_name.textContent = "當前共享記憶體的資料";
@@ -41,7 +43,7 @@ async function switch_button_state(clickedButton) {
 
     } else if (buttonValue === "Terminal") {
         info_title_name.textContent = "當前工具:";
-        info_show_block.innerHTML = `<p>終端機串流畫面...</p>`;
+        info_show_block.innerHTML = log_history;
 
     } else if (buttonValue === "IoT Devices") {
         const devices_name = await get_devices_name();
@@ -87,10 +89,53 @@ async function start_device(clickedButton) {
 
         const info_title_data = document.querySelector(".info_title_data");
         if (info_title_data) info_title_data.textContent = deviceName;
-        
+        initReceiver();
+        await start_pentest();
     } else if (started_device !== clickedButton.id) {
         alert(`目前已有設備 [${started_device}] 正在執行中，請先停止它！`);
     }
+}
+
+let pentestWs = null;
+var log_history = "";
+
+// 初始化並連線 WebSocket 的函式
+function initReceiver() {
+
+    const wsB = new WebSocket("ws://localhost:8000/ws/receive_b");
+
+    wsB.onopen = function() {
+        console.log("B 成功連線到即時接收通道");
+    };
+
+    wsB.onmessage = function(event) {
+    // 1. 解析後端傳過來的 JSON 資料
+    const data = JSON.parse(event.data);
+    // console.log("B 收到來自 API 轉發的資料：", data);
+
+    const logContainer = document.querySelector(".info_show_block");
+    if (logContainer) {
+
+        // 3. 渲染到畫面上
+        log_history += `
+            <div class="log_${data.log_type}_section">
+                <span class="log_type_${data.log_type}">${data.log_type}</span> 
+                <span class="log_content_${data.log_type}">${data.log}</span>
+            </div>
+        `;
+
+        if (current_tab === "Terminal") {
+            logContainer.innerHTML = log_history;
+        }
+        
+        // 4. 讓終端機自動捲動到最底部
+        // logContainer.scrollTop = logContainer.scrollHeight;
+    }
+};
+
+    wsB.onclose = function() {
+        console.log("接收通道已斷開");
+    };
 }
 
 // 取得裝置清單的 API 函式
@@ -128,6 +173,7 @@ function pentest_button_init() {
    
     if (firstButton) {
         switch_button_state(firstButton);
+        current_tab = firstButton.value;
     }
 }
 

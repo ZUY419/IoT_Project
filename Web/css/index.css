@@ -113,6 +113,46 @@ article {
     justify-content: center;
 }
 
+/* ================= 終端機日誌容器與行共用樣式 ================= */
+.info_show_block {
+    border-radius: 8px;
+    padding: 12px;
+    overflow-y: auto;
+    font-family: 'Courier New', Courier, monospace;
+
+    height: 60vh;
+}
+
+/* 每一行日誌的預設外觀（與背景融合，微幅透出層次） */
+.info_show_block > div {
+    display: flex;
+    align-items: center;
+    margin-bottom: 6px;
+    padding: 6px 10px;
+    border-radius: 4px;
+    background-color: rgba(255, 255, 255, 0.02); /* 微微的透明亮面感 */
+    border-left: 3px solid #444;
+}
+
+/* 標籤共用設定（低調、精緻、不搶戲） */
+.info_show_block span[class^="log_type_"] {
+    font-size: 12px;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-right: 12px;
+    text-transform: uppercase;
+    min-width: 100px;
+    text-align: center;
+    letter-spacing: 0.5px;
+}
+
+/* 內容文字共用設定 */
+.info_show_block span[class^="log_content_"] {
+    font-size: 14px;
+    word-break: break-all;
+}
+
 .info_show {
     padding: 10px;
     margin: 0px 10px 10px 10px;
@@ -124,7 +164,7 @@ article {
     border-radius: 20px;
     border-width: 3px;
 
-    flex: 1;
+    flex: 8;
     display: flex;
     flex-direction: column;
 }
@@ -139,7 +179,7 @@ article {
     flex-direction: row;
     align-items: end;
     justify-content: space-between;
-    flex: 8;
+    flex: 1;
 }
 
 .info_title {
@@ -163,16 +203,6 @@ article {
 
 .pentest_state {
     font-size: 20px;
-}
-
-.info_show_block {
-    height: 65vh;
-
-    margin-top: 10px;
-
-    font-family: 'JetBrains Mono', monospace;
-    
-    overflow-y: auto; 
 }
 
 .device_selection_block {
