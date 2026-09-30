@@ -171,7 +171,7 @@ class IoTPipelineOrchestrator:
             arguments = action_name.get("arguments", {})
 
         self.shared_memory = util.read_json(share_memory_file)
-        self.shared_memory["tool_history"].append(action_name)
+        #self.shared_memory["tool_history"].append(action_name)
 
         log = ""
 
@@ -242,39 +242,50 @@ class IoTPipelineOrchestrator:
 
             raw_log = self.toolbox.search_rag_poc(query)
             
+            # 🛡️ 強化安全解析邏輯
             try:
-                cve_list = json.loads(raw_log) if isinstance(raw_log, str) else raw_log
-                
+                # 1. 判斷回傳型態並解析 JSON
+                if isinstance(raw_log, str):
+                    raw_log_trimmed = raw_log.strip()
+                    if raw_log_trimmed.startswith("[") or raw_log_trimmed.startswith("{"):
+                        cve_list = json.loads(raw_log_trimmed)
+                    else:
+                        # 非 JSON 格式（如純文字提示或錯誤）
+                        return f"RAG Search result: {raw_log}"
+                else:
+                    cve_list = raw_log
+
+                # 2. 處理資料寫入 shared_memory
                 if isinstance(cve_list, list):
                     added = 0
                     for cve in cve_list:
-                        # 兼容 id 與 cve_id 兩種命名
-                        cve_id = cve.get("id") or cve.get("cve_id")
-                        
-                        if cve_id:
-                            cve["cve_id"] = cve_id
-                            
-                            # 🛡️ 雙向去重檢查（同時比對 cve_id 與 id，避免與 NVD 重複）
-                            is_duplicate = any(
-                                item.get("cve_id") == cve_id or item.get("id") == cve_id 
-                                for item in self.shared_memory["mapped_cves"]
-                            )
-                            
-                            if not is_duplicate:
-                                self.shared_memory["mapped_cves"].append(cve)
-                                added += 1
-                                
+                        if isinstance(cve, dict):
+                            cve_id = cve.get("id") or cve.get("cve_id")
+                            if cve_id:
+                                cve["cve_id"] = cve_id
+                                is_duplicate = any(
+                                    item.get("cve_id") == cve_id or item.get("id") == cve_id 
+                                    for item in self.shared_memory["mapped_cves"]
+                                )
+                                if not is_duplicate:
+                                    self.shared_memory["mapped_cves"].append(cve)
+                                    added += 1
                     log = f"Successfully retrieved and integrated {added} new vulnerability information."
+                elif isinstance(cve_list, dict):
+                    # 如果回傳的是單一物件
+                    self.shared_memory["mapped_cves"].append(cve_list)
+                    log = "Successfully retrieved 1 new vulnerability information."
                 else:
                     log = str(raw_log)
 
                 util.print_and_write_share_momery(self.shared_memory)
-
                 return log
                     
             except Exception as e:
-                log = f"Parsing result failed: {str(e)}"
-                log_info.info(f"[SEARCH RAG POC ERROR] {log}")
+                # 當 JSON 解析失敗時，不當機，直接把 raw_log 當作純文字結果回傳
+                log = f"RAG Search Raw Output: {str(raw_log)}"
+                log_info.info(f"[SEARCH RAG POC WARN] Raw response returned instead of JSON: {log}")
+                return log
 
         elif action == "get_local_cve_details":
             log = self.toolbox.get_local_cve_details("CVE-2025-1000")
