@@ -178,8 +178,8 @@ Your role is NOT to execute system commands, but to analyze target asset states,
 
 2. **CRITICAL REASONING REQUIREMENTS (`reason` field)**:
    - Your `reason` text MUST explicitly state **BOTH**:
-     a) Why the selected CVE was chosen (e.g., "Yields unauthenticated SQLi / direct database control").
-     b) Why higher-CVSS or competing CVEs were rejected (e.g., "Filtered out CVE-2019-11072 despite CVSS 9.8 because it is purely DoS").
+     a) Why the selected CVE was chosen .
+     b) Why higher-CVSS or competing CVEs were rejected .
 
 3. **STATE TRANSITION & RAG QUERY GENERATION**:
    - Select EXACTLY ONE primary candidate (`selected_target_cve`) to pass to Stage 3 (Exploitation).
@@ -217,7 +217,14 @@ JSON SCHEMA REQUIREMENT:
       "exploit_strategy": "<BRIEF_STRATEGY_DESCRIPTION>"
     }}
   ],
-  "recommended_next_steps": ["SEARCH_RAG_POC", "STAGE3_EXPLOIT"]
+  "recommended_next_steps": [
+    {{
+      "name": "search_rag_poc",
+      "arguments": {{
+        "query": "<PRECISION_RAG_SEARCH_STRING>"
+      }}
+    }}
+  ]
 }}
 """
 

@@ -13,7 +13,7 @@ class TaskTree:
             "stage1_recon": "todo",          # 資產與服務偵察
             "stage2_cve_mapping": "todo",    # NVD 漏洞查詢與戰術思考
             "stage3_exploit": "todo",        # 漏洞利用
-            "stage4_report": "todo"          # 報告生成
+            #"stage4_report": "todo"          # 報告生成
         }
         
         self.scanned_ports = {} 
@@ -58,7 +58,7 @@ class TaskTree:
                     current_node["version"] = ai_version
 
         # 1. 評估閘門狀態
-        self._auto_eval_stage_status(current_stage)
+        self._auto_eval_stage_status(current_stage, perception_json)
 
         # 2. 狀態切換
         next_stage = current_stage
@@ -75,7 +75,7 @@ class TaskTree:
             
         return next_stage
 
-    def _auto_eval_stage_status(self, current_stage: str):
+    def _auto_eval_stage_status(self, current_stage: str, perception_json: dict):
         # --- Stage 1: 純資產偵察 ---
         if current_stage == "stage1_recon":
             has_ports = len(self.scanned_ports) > 0
@@ -89,27 +89,51 @@ class TaskTree:
                 )
             )
             
-            ai_said_finish = (
-                bool(self.latest_recommended_steps) and 
-                any(str(move).upper() in ["NONE", "FINISH", "STOP", "NO_TOOL"] for move in self.latest_recommended_steps)
-            )
+            # 1. 檢查 AI 是否在 stage1_status 中宣告完成 (例如 is_recon_completed == True)
+            stage1_meta = perception_json.get("stage1_status", {})
+            ai_meta_completed = False
+            if isinstance(stage1_meta, dict):
+                ai_meta_completed = stage1_meta.get("is_recon_completed", False) or stage1_meta.get("completed", False)
 
-            # 只有在「全部識別完畢」或者「AI 主動宣告完工」時，才允許通過 Stage 1！
-            if all_ports_identified or ai_said_finish:
+            # 2. 檢查 recommended_next_steps 是否包含 NONE / FINISH
+            steps = perception_json.get("recommended_next_steps", [])
+            ai_said_finish = False
+            for step in steps:
+                # 處理 step 是 dict 或 str 的兩種情況
+                action_name = ""
+                if isinstance(step, dict):
+                    action_name = str(step.get("name", "")).upper()
+                else:
+                    action_name = str(step).upper()
+                    
+                if action_name in ["NONE", "FINISH", "STOP", "NO_TOOL", "NEXT_STAGE"]:
+                    ai_said_finish = True
+                    break
+
+            # 只要滿足任一條件（全部識別、AI屬性宣告完成、或行動給NONE），就允許通關！
+            if all_ports_identified or ai_said_finish or ai_meta_completed:
                 self.stages["stage1_recon"] = "completed"
-
-        # --- Stage 2: NVD 查詢與戰術思考 ---
+        
+        # --- Stage 2: CVE Mapping & 戰術評估 ---
         elif current_stage == "stage2_cve_mapping":
-            # 條件：所有埠口都標記為已查詢過 NVD (或外部邏輯已完成 CVE 批次比對)
-            # 且 LLM 完成了選定策略 (stage2_decision_made = True)
-            if self.stage2_decision_made:
+            # 1. 檢查 AI 是否已選定目標 CVE (例如 selected_target_cve / recommended_target)
+            selected_cve = perception_json.get("selected_target_cve") or perception_json.get("recommended_target")
+            
+            # 2. 檢查 recommended_next_steps 是否為 NONE 或包含轉向 Exploit 的動作
+            steps = perception_json.get("recommended_next_steps", [])
+            ai_said_finish = False
+            for step in steps:
+                action_name = str(step.get("name", "")) if isinstance(step, dict) else str(step)
+                if action_name.upper() in ["NONE", "FINISH", "STOP", "NO_TOOL", "NEXT_STAGE", "EXPLOIT"]:
+                    ai_said_finish = True
+                    break
+
+            # 3. 檢查 AI 是否在 stage2_status 中宣告完成
+            stage2_meta = perception_json.get("stage2_status", {})
+            ai_meta_completed = False
+            if isinstance(stage2_meta, dict):
+                ai_meta_completed = stage2_meta.get("is_cve_completed", False) or stage2_meta.get("completed", False)
+
+            # 只要 AI 選定了目標 CVE，或者行動給 NONE/EXPLOIT，就允許進入 Stage 3！
+            if selected_cve or ai_said_finish or ai_meta_completed:
                 self.stages["stage2_cve_mapping"] = "completed"
-
-        # --- Stage 3: 漏洞利用 ---
-        elif current_stage == "stage3_exploit":
-            if any(info.get("is_exploited", False) for info in self.scanned_ports.values()):
-                self.stages["stage3_exploit"] = "completed"
-
-    def mark_stage2_decision_done(self):
-        self.stage2_decision_made = True
-        self._auto_eval_stage_status("stage2_cve_mapping")
