@@ -38,7 +38,7 @@ TOOL_DESCRIPTION = [
                 "properties": {
                     "query": {
                         "type": "string",
-                        "description": "Search keyword, usually a device brand, model, or CVE ID (e.g., 'D-Link DIR-816' or 'CVE-2017-14491')."
+                        "description": "Search keyword, usually CVE ID (e.g., 'CVE-2017-14491')."
                     }
                 },
                 "required": ["query"]

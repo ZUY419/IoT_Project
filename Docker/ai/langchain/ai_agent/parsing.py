@@ -43,8 +43,8 @@ def ai_parsing_stage2(raw_log: str, prior_context: str = "") -> dict:
     # 2. 組裝 User Content
     user_content = f"""{prior_context}
 
-=== NVD SEARCHED CVE REPORT TO EVALUATE ===
-{raw_log}"""
+    === NVD SEARCHED CVE REPORT TO EVALUATE ===
+    {raw_log}"""
 
     # 3. 呼叫 LLM 進行推理並解析 JSON
     parsed_result = _call_ollama_and_parse_json(system_prompt, user_content, "Stage 2 Reasoning")
@@ -79,7 +79,7 @@ def ai_parsing_stage3(raw_log, prior_context=""):
 
     user_content = f"""{prior_context}
 
-=== LAST EXPLOIT EXECUTION RESULT ===
-{raw_log}"""
+    === LAST EXPLOIT EXECUTION RESULT ===
+    {raw_log}"""
     
     return _call_ollama_and_parse_json(system_prompt, user_content, "Stage 3")
