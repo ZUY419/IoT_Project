@@ -11,8 +11,15 @@ from datetime import datetime
 from pathlib import Path
 
 from config.logging import log_info
+import util
 
-REPORT_DIR = Path(os.getenv("REPORT_DIR", Path(__file__).resolve().parent / "reports"))
+# Markdown 報告放在本台設備專屬資料夾 workspace/data/<設備名稱>/reports/（可用 REPORT_DIR 覆寫）
+REPORT_DIR = Path(os.getenv("REPORT_DIR", util.get_device_data_dir() / "reports"))
+
+# JSON 報告放在「集中、扁平」的資料夾：workspace/reports/（可用 JSON_REPORT_DIR 覆寫）。
+# 檔名已含設備名稱（{firmware}_{時間戳}.json），網頁只要列這一個資料夾即可，
+# 不必再進到各設備子資料夾用設備名稱去找。
+JSON_REPORT_DIR = Path(os.getenv("JSON_REPORT_DIR", util.WORKSPACE_DIR / "reports"))
 
 
 def _fmt_ports(sm: dict) -> str:
@@ -131,31 +138,65 @@ def _fmt_cve_section(sm: dict) -> str:
 
 def generate_markdown_report(sm: dict, target_ip: str) -> str:
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
+    JSON_REPORT_DIR.mkdir(parents=True, exist_ok=True)
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-    path = REPORT_DIR / f"pentest_report_{target_ip.replace('.', '_')}_{ts}.md"
+    device = util.get_device_name()
+    # 檔名格式：{firmware}_{YYYYMMDD_HHMMSS}.{ext}
+    path = REPORT_DIR / f"{device}_{ts}.md"           # .md 在設備資料夾
+    json_path = JSON_REPORT_DIR / f"{device}_{ts}.json"  # .json 在集中扁平資料夾
 
     attempts = sm.get("exploit_attempts", [])
     total_cve = len(attempts)
-    succ_cve = sum(1 for a in attempts if a.get("success"))
+
+    # ---- 驗證結果細分類 ----
+    def _is_disclosure(r):
+        cid = str(r.get("cve_id", "")).upper()
+        return bool(r.get("disclosure")) or cid.startswith("INFO-DISCLOSURE")
+
+    hit_cnt        = sum(1 for a in attempts if a.get("success"))
+    disclosure_hit = sum(1 for a in attempts if a.get("success") and _is_disclosure(a))
+    cve_hit        = hit_cnt - disclosure_hit
+    dos_cnt        = sum(1 for a in attempts if a.get("skipped_dos"))
+    attempted_cnt  = sum(1 for a in attempts if not a.get("success") and not a.get("skipped_dos"))
+    att_poc = sum(1 for a in attempts
+                  if not a.get("success") and not a.get("skipped_dos") and a.get("method") == "poc")
+    att_llm = sum(1 for a in attempts
+                  if not a.get("success") and not a.get("skipped_dos") and a.get("method") == "llm")
+    att_other = attempted_cnt - att_poc - att_llm
+
+    open_ports = sum(len(sm.get('ports', {}).get(p, [])) for p in ('TCP', 'UDP'))
 
     md = f"""# 滲透測試報告 — {target_ip}
 
 > 本報告由 PentestGPT v2 (SOP 固定流程版) 自動產生
 > 產生時間：{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 > 執行模型：qwen2.5-coder:7b（僅用於指令生成與解析，流程決策由固定 SOP 控制）
+> 設備資料夾：workspace/data/{util.get_device_name()}/
 
 ---
 
 ## 一、執行摘要
 
+### 1-1 掃描與檢索統計
+
 | 項目 | 數量 |
 |---|---|
-| 開放埠 (TCP+UDP) | {sum(len(sm.get('ports', {}).get(p, [])) for p in ('TCP', 'UDP'))} |
+| 開放埠 (TCP+UDP) | {open_ports} |
 | 已分析 Web 端點 | {len(sm.get('analyzed_urls', []))} |
 | 檢索出的 CVE | {len(sm.get('cves', []))} |
-| 已驗證 CVE | {total_cve} |
-| 驗證命中 | {succ_cve} |
-| 未果 (Attempted) | {total_cve - succ_cve} |
+| 進入驗證的項目（CVE + 資訊洩漏發現） | {total_cve} |
+
+### 1-2 漏洞驗證結果分類
+
+| 驗證結果 | 數量 | 說明 |
+|---|---|---|
+| ✅ 驗證命中 | {hit_cnt} | 其中：資訊洩漏 {disclosure_hit}、CVE 驗證 {cve_hit} |
+| ⏭️ DoS 主動略過 | {dos_cnt} | 偵測為阻斷服務類，為保護靶機不實際驗證 |
+| ❌ Attempted 未果 | {attempted_cnt} | 其中：PoC 改寫 {att_poc}、LLM 探測 {att_llm}{f"、其他 {att_other}" if att_other else ""} |
+| **合計** | **{total_cve}** | |
+
+> 說明：「驗證命中」以程式硬條件判定（非 LLM 自稱）；「DoS 主動略過」是刻意不攻擊以保護靶機，非驗證失敗；
+> 「Attempted」代表已實際嘗試但未重現。分母包含資訊洩漏發現，故與「檢索出的 CVE」不一定相等。
 
 ---
 
@@ -187,5 +228,67 @@ def generate_markdown_report(sm: dict, target_ip: str) -> str:
     with open(path, "w", encoding="utf-8") as f:
         f.write(md)
 
+    # =====================================================================
+    # 另存一份結構化 JSON，方便網頁直接讀取顯示（與 .md 同名、同資料夾）
+    # =====================================================================
+    def _result_of(r):
+        if r.get("skipped_dos"):
+            return "dos_skipped"
+        if r.get("success"):
+            return "hit"
+        return "attempted"
+
+    findings = []
+    for r in attempts:
+        findings.append({
+            "id": r.get("cve_id", "UNKNOWN"),
+            "cvss": r.get("cvss", "N/A"),
+            "result": _result_of(r),              # hit / dos_skipped / attempted
+            "is_disclosure": _is_disclosure(r),
+            "method": r.get("method"),            # poc / llm / None
+            "description": (r.get("description") or "").strip(),
+            "success_cmd": r.get("success_cmd"),
+            "attempts": [
+                {
+                    "n": a.get("n"),
+                    "cmd": a.get("cmd", ""),
+                    "judged_success": bool(a.get("judged_success")),
+                    "is_poc": bool(a.get("is_poc")),
+                    "response_excerpt": (a.get("response_excerpt") or "")[:500],
+                }
+                for a in r.get("attempts", [])
+            ],
+        })
+
+    report_data = {
+        "device": device,
+        "target_ip": target_ip,
+        "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "model": "qwen2.5-coder:7b",
+        "summary": {
+            "open_ports": open_ports,
+            "analyzed_web_endpoints": len(sm.get("analyzed_urls", [])),
+            "retrieved_cves": len(sm.get("cves", [])),
+            "verified_items": total_cve,
+            "classification": {
+                "hit": {"total": hit_cnt, "disclosure": disclosure_hit, "cve": cve_hit},
+                "dos_skipped": dos_cnt,
+                "attempted": {"total": attempted_cnt, "poc": att_poc, "llm": att_llm, "other": att_other},
+            },
+        },
+        "ports": sm.get("ports", {"TCP": [], "UDP": []}),
+        "web": {
+            "vendor": sm.get("web_footprints", {}).get("iot_vendor", {}),
+            "device_type": sm.get("web_footprints", {}).get("device_type", {}),
+            "analyzed_urls": sm.get("analyzed_urls", []),
+        },
+        "findings": findings,
+        "report_md_file": path.name,
+    }
+
+    with open(json_path, "w", encoding="utf-8") as f:
+        json.dump(report_data, f, ensure_ascii=False, indent=2)
+
     log_info.info(f"📄 報告已寫入: {path}")
+    log_info.info(f"🧾 JSON 報告已寫入: {json_path}")
     return str(path)

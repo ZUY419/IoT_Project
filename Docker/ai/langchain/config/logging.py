@@ -77,3 +77,19 @@ class log_info:
         """
         util.update_share_memory(data)
         log_info._send_to_fastapi("share_memory", json.dumps(data, ensure_ascii=False))
+
+    @staticmethod
+    def stage(index, total, name):
+        """回報目前執行到第幾個階段（給網頁顯示進度列用）。
+        payload: {"index":1,"total":6,"name":"資產偵察"}"""
+        payload = json.dumps({"index": index, "total": total, "name": name}, ensure_ascii=False)
+        print(f"[STAGE   ] {index}/{total} {name}")
+        log_info._send_to_fastapi("stage", payload)
+
+    @staticmethod
+    def done(device=None, report_file=None):
+        """回報整個滲透測試流程結束（網頁據此跳通知並自動載入最終報告）。
+        payload: {"device":"DIR-880L","report_file":"DIR-880L_20261013_154943.md"}"""
+        payload = json.dumps({"device": device, "report_file": report_file}, ensure_ascii=False)
+        print(f"[DONE    ] {payload}")
+        log_info._send_to_fastapi("done", payload)

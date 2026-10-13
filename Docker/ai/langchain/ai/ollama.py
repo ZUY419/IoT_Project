@@ -84,6 +84,18 @@ except ImportError:
 # =============================================================================
 OLLAMA_TIMEOUT = float(os.getenv("OLLAMA_TIMEOUT", "80"))
 
+# =============================================================================
+# ⚠️【防重複迴圈 / 修 500: prediction aborted, token repeat limit reached】
+# qwen2.5-coder:7b 在 temperature=0（貪婪解碼）+ 結構化 JSON 輸出下，容易陷入
+# 「一直重複吐同一 token」的鬼打牆，Ollama 偵測到就中止並回 500。
+# 對策：略提 temperature、加 repeat_penalty、設 num_predict 上限，打斷重複。
+# 都可用 .env 覆寫。
+# =============================================================================
+LLM_TEMPERATURE    = float(os.getenv("LLM_TEMPERATURE", "0.3"))
+LLM_TOP_P          = float(os.getenv("LLM_TOP_P", "0.9"))
+LLM_REPEAT_PENALTY = float(os.getenv("LLM_REPEAT_PENALTY", "1.3"))
+LLM_NUM_PREDICT    = int(os.getenv("LLM_NUM_PREDICT", "1024"))
+
 # 另建一個「帶逾時」的原生 client 給 path 2 用
 # （config/config.py 提供的 ollama_client 可能沒設 timeout，這裡不去動它，另開一個安全的）。
 _timeout_client = None
@@ -95,35 +107,35 @@ except Exception as _e:
     log_info.warn(f"⚠️ 無法建立帶逾時的 Ollama 客戶端，path 2 將沿用既有 ollama_client：{_e}")
 
 
-def create_langchain_chat_model(model_name: str, temperature: float = 0.0, timeout: float = None):
+def create_langchain_chat_model(model_name: str, temperature: float = None, timeout: float = None):
     """
     建立 LangChain ChatOllama 物件 (針對 Qwen2.5-Coder 優化 sampling 參數)
-    ⚠️ 加上 timeout，避免某次 chain.invoke() 卡住不回導致整條流程凍住。
+    ⚠️ 含 timeout（避免卡死）與 repeat_penalty/num_predict（避免鬼打牆 500）。
     timeout=None 時用全域 OLLAMA_TIMEOUT；某些重任務（如改寫 PoC）可傳入較大的值。
     """
     if not LANGCHAIN_AVAILABLE or ChatOllama is None:
         return None
     eff_timeout = timeout if timeout else OLLAMA_TIMEOUT
+    temp = LLM_TEMPERATURE if temperature is None else temperature
+    base_kwargs = dict(
+        base_url=OLLAMA_HOST,
+        model=model_name,
+        temperature=temp,
+        top_p=LLM_TOP_P,
+        repeat_penalty=LLM_REPEAT_PENALTY,   # ⚠️ 打斷重複迴圈
+        num_predict=LLM_NUM_PREDICT,         # ⚠️ 限制輸出長度，避免跑飛
+        format="json",
+    )
     try:
-        return ChatOllama(
-            base_url=OLLAMA_HOST,
-            model=model_name,
-            temperature=temperature,
-            top_p=0.95,
-            format="json",
-            timeout=eff_timeout,   # ⚠️ 單次呼叫逾時（秒）
-        )
+        return ChatOllama(timeout=eff_timeout, **base_kwargs)
     except TypeError:
-        # 某些 langchain_community 版本的 ChatOllama 不收 timeout 參數，
-        # 退回不帶 timeout 的建法（此時仍有 generation.py 的應用層逾時保護）。
+        # 舊版 ChatOllama 可能不收 timeout（或部分參數），逐步降級但保住 sampling 參數
         log_info.warn("⚠️ 此版本 ChatOllama 不支援 timeout 參數，改用應用層逾時保護。")
-        return ChatOllama(
-            base_url=OLLAMA_HOST,
-            model=model_name,
-            temperature=temperature,
-            top_p=0.95,
-            format="json",
-        )
+        try:
+            return ChatOllama(**base_kwargs)
+        except TypeError:
+            return ChatOllama(base_url=OLLAMA_HOST, model=model_name,
+                              temperature=temp, format="json")
     except Exception as e:
         log_info.error(f"無法建立 LangChain ChatOllama 模型 ({model_name}): {e}")
         return None
@@ -196,7 +208,12 @@ def call_ollama_json(
                 {"role": "user", "content": user_content},
             ],
             format=response_schema,
-            options={"temperature": 0.0, "top_p": 0.95},
+            options={
+                "temperature": LLM_TEMPERATURE,
+                "top_p": LLM_TOP_P,
+                "repeat_penalty": LLM_REPEAT_PENALTY,   # ⚠️ 打斷重複迴圈
+                "num_predict": LLM_NUM_PREDICT,         # ⚠️ 限制輸出長度
+            },
         )
 
         raw_content = response.message["content"].strip()

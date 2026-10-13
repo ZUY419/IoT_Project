@@ -1,8 +1,13 @@
 # Docker/ai/langchain/util.py
 import json
 import os
+import re
 from pathlib import Path
 from typing import Any, Dict, List
+
+from dotenv import load_dotenv
+
+load_dotenv(Path(__file__).resolve().parent / ".env")
 
 def get_current_folder_path() -> Path:
     return Path(__file__).resolve().parent
@@ -25,8 +30,44 @@ def write_json(path: Path, data: dict) -> bool:
         return False
 
 folder = get_current_folder_path()
-share_memory_file = folder / "data" / "share memory" / "share memory.json"
-udp_cache_file = folder / "data" / "UDP.json"
+
+# =====================================================================
+# 【資料集中 + 每台設備獨立資料夾】
+# 所有滲透測試資料統一放在 workspace/data/<設備名稱>/ 底下，避免不同設備
+# 共用同一份 UDP.json / share_memory.json 而讀到上一台設備殘留的資料。
+#   設備名稱來源（依序）：DEVICE_NAME → FIRMWARE_NAME → PENTEST_TARGET → TARGET_IP
+#   （靶機 IP 都是 192.168.0.1，無法區分設備，建議用 run.sh 傳入韌體名稱當 DEVICE_NAME）
+# =====================================================================
+WORKSPACE_DIR = folder / "workspace"
+
+
+def _slug(s: str) -> str:
+    """把設備名稱清成安全的資料夾名稱。"""
+    s = (s or "").strip()
+    s = re.sub(r"[^A-Za-z0-9._\-]+", "_", s)
+    return s.strip("._-") or "default"
+
+
+def get_device_name() -> str:
+    return _slug(
+        os.getenv("DEVICE_NAME")
+        or os.getenv("FIRMWARE_NAME")
+        or os.getenv("PENTEST_TARGET")
+        or os.getenv("TARGET_IP")
+        or "default"
+    )
+
+
+def get_device_data_dir() -> Path:
+    """回傳（並確保存在）本台設備專屬的資料夾 workspace/data/<設備名稱>/。"""
+    d = WORKSPACE_DIR / "data" / get_device_name()
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+DEVICE_DATA_DIR = get_device_data_dir()
+share_memory_file = DEVICE_DATA_DIR / "share_memory.json"
+udp_cache_file = DEVICE_DATA_DIR / "UDP.json"
 
 def update_share_memory(data: dict):
     write_json(share_memory_file, data)

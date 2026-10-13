@@ -309,7 +309,8 @@ class PentestSOP:
     def _run_poc_file(self, cve_id: str, poc_file: dict) -> dict:
         """把 coder 改寫好的 PoC 寫成檔案並執行，回傳一筆 attempt 紀錄。"""
         import os as _os
-        poc_dir = _os.path.join(_os.getcwd(), "poc_tmp")
+        # PoC 檔也放進本台設備專屬資料夾 workspace/data/<設備名稱>/poc_tmp/
+        poc_dir = str(util.get_device_data_dir() / "poc_tmp")
         _os.makedirs(poc_dir, exist_ok=True)
 
         filename = poc_file.get("filename") or f"poc_{cve_id}.py"
@@ -675,18 +676,32 @@ class PentestSOP:
         return path
 
     # ==================================================================
+    # 執行順序（依資料依賴排；編號即網頁進度列顯示的 1~6）
+    STAGES = [
+        ("資產偵察",  "stage1_recon"),
+        ("Web 列舉",  "stage3_web_enum"),
+        ("裝置指紋",  "_fingerprint_device"),
+        ("漏洞檢索",  "stage2_vuln_search"),
+        ("漏洞驗證",  "stage4_verify"),
+        ("產生報告",  "stage5_report"),
+    ]
+
     def run(self):
         log_info.info("🚀 PentestGPT v2 (SOP 固定流程版) 啟動！")
-        self.stage1_recon()
         # ⚠️【順序】Web 分析 → 裝置指紋(標準協定主動探測) → 漏洞檢索。
         #    指紋階段用標準協定抽出真實 vendor/model/firmware，再驅動漏洞檢索；
-        #    這一步不假設任何廠牌，對未知設備一體適用。
-        self.stage3_web_enum()
-        self._fingerprint_device()
-        self.stage2_vuln_search()
-        self.stage4_verify()
-        path = self.stage5_report()
+        #    每進一個階段先 log_info.stage() 回報進度，網頁據此畫進度列。
+        total = len(self.STAGES)
+        path = None
+        for idx, (name, method) in enumerate(self.STAGES, 1):
+            log_info.stage(idx, total, name)
+            result = getattr(self, method)()
+            if method == "stage5_report":
+                path = result
         log_info.info("🏁 全流程結束。")
+        # 回報完成：網頁據此跳通知並自動載入最終報告
+        report_file = os.path.basename(path) if path else None
+        log_info.done(device=util.get_device_name(), report_file=report_file)
         return path
 
 
