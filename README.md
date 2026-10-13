@@ -16,15 +16,15 @@
 
 執行 `openWeb.sh` 開啟網頁後,選擇目標 IoT 靶機:
 
-\`\`\`bash
+```bash
 ./openWeb.sh
-\`\`\`
+```
 
 ### 方式二:指定韌體啟動
 
-\`\`\`bash
+```bash
 ./run.sh "韌體名稱"
-\`\`\`
+```
 
 - 韌體檔案位於:`Firmware/Firmware_tool/firmware-analysis-plus/fw_bin`
 - **新增韌體**:將韌體的 `.bin` 檔放入上述資料夾即可。
@@ -33,6 +33,6 @@
 
 若韌體靶機已啟動完畢,可重新開啟 `ai_agent` 容器:
 
-\`\`\`bash
+```bash
 ./Docker/restartAI.sh
-\`\`\`
+```
