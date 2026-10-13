@@ -1,0 +1,45 @@
+services:
+  # LangChain AI Agent
+  ai_agent:
+    build: ./ai/langchain
+    container_name: ai_agent
+    # 設定改由 ai/langchain/.env 提供（程式用 load_dotenv 讀取），compose 不再寫死
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - iot_bridge
+    volumes:
+      - ./ai/langchain:/app
+      - /var/run/docker.sock:/var/run/docker.sock
+    working_dir: /app
+    command: python main.py
+    depends_on:
+      rag:
+        condition: service_healthy   # 等 RAG healthcheck 通過（FAISS 載入完成）才啟動
+
+  # RAG Python
+  rag:
+    build: ./RAG
+    container_name: RAG
+    working_dir: /app
+    command: python server.py
+    # 設定改由 RAG/.env 提供（程式用 load_dotenv 讀取），compose 不再寫死
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - iot_bridge
+    volumes:
+      - ./RAG:/app
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status==200 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+networks:
+  iot_bridge:
+    name: iot_bridge
+    external: true

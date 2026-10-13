@@ -1,0 +1,24 @@
+# --- RAG / 向量檢索 ---
+faiss-cpu
+numpy
+ollama
+
+# --- 進度條 / 環境變數 ---
+tqdm
+python-dotenv
+
+# --- Web / API Server ---
+flask
+requests
+beautifulsoup4
+
+# --- 資料處理 ---
+pandas
+
+# --- Schema 驗證 ---
+pydantic
+
+# --- LangChain 相關 ---
+langchain-core
+langchain-community
+langchain-ollama

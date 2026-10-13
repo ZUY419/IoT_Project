@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Agent IoT 滲透測試控制台</title>
+
+    <!-- Google 字體與 Fira Code 程式碼字型 -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600;700&family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
+    <!-- 外部樣式表 -->
+    <link rel="stylesheet" href="css/index.css">
+</head>
+<body>
+    <header>
+        <section class="web_title">
+            <p>專題: 利用 AI Agent 對 IoT 進行滲透測試</p>
+        </section>
+    </header>
+
+    <!-- 腳本引入 (注意 Linux 下小寫路徑) -->
+    <script src="js/index.js"></script>
+
+    <article>
+        <section class="info_block">
+            <!-- 介面按鈕切換區 -->
+            <div class="pentest_buttons">
+                <section class="switch_show_buttons">
+                    <button class="switch_show_button" onclick="switch_button_state(this)" value="IoT Devices">
+                        IoT 設備
+                    </button>
+                    <button class="switch_show_button" onclick="switch_button_state(this)" value="IoT Log">
+                        IoT 日誌
+                    </button>
+                    <button class="switch_show_button" onclick="switch_button_state(this)" value="Terminal">
+                        終端機
+                    </button>
+                    <button class="switch_show_button" onclick="switch_button_state(this)" value="Shared Memory">
+                        共享記憶體
+                    </button>
+                    <!-- <button class="switch_show_button" onclick="switch_button_state(this)" value="Tool History">
+                        工具歷史
+                    </button> -->
+                    <button class="switch_show_button" onclick="switch_button_state(this)" value="AI Interaction">
+                        AI 互動
+                    </button>
+                </section>
+            </div>
+            
+            <!-- 介面訊息顯示區 -->
+            <section class="info_show">
+                <div class="info_title_block">
+                    <div class="info_title">
+                        <p class="info_title_name"></p>
+                        <p class="info_title_data"></p>
+                    </div>
+                    <p class="pentest_state"></p>
+                </div>
+                <hr style="margin: 0px; border-color: #C08552; opacity: 0.4;">
+                <div class="info_show_block">
+                    <!-- 動態內容渲染區 -->
+                </div>
+            </section>
+        </section>
+    </article>
+
+</body>
+</html>

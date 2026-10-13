@@ -1,0 +1,10 @@
+faiss-cpu
+numpy
+pandas
+tqdm
+python-dotenv
+requests
+ollama
+Flask
+beautifulsoup4
+pymongo
