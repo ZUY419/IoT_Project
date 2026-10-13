@@ -50,19 +50,28 @@ sleep 2
 # 5. 自動建立綁定 br0 的 Docker 外部網路
 docker network create -d bridge -o com.docker.network.bridge.name=br0 iot_bridge 2>/dev/null
 
+# ================= 新增：設定本次設備名稱 =================
+# ai_agent 容器只讀 ai/langchain/.env（load_dotenv），讀不到這裡的 shell 變數，
+# 所以要在 docker compose up 之前，把本次韌體名稱寫進 .env 的 DEVICE_NAME。
+# 這樣容器就會把資料存到 workspace/data/<韌體名稱>/，每台設備互不污染。
+ENV_FILE="$SCRIPT_DIR/Docker/ai/langchain/.env"
+if [ -f "$ENV_FILE" ]; then
+    if grep -q '^DEVICE_NAME=' "$ENV_FILE"; then
+        sed -i "s|^DEVICE_NAME=.*|DEVICE_NAME=${firmware}|" "$ENV_FILE"
+    else
+        echo "DEVICE_NAME=${firmware}" >> "$ENV_FILE"
+    fi
+    echo "[+] 已設定 DEVICE_NAME=${firmware}（資料將存到 workspace/data/${firmware}/）"
+else
+    echo "[-] 警告: 找不到 $ENV_FILE，DEVICE_NAME 未設定，資料會落到預設資料夾。"
+fi
+# =========================================================
+
 # 6. 正式啟動 Docker 大軍
 echo "[+] 正在啟動專案 Docker 容器..."
 cd Docker
 docker compose up -d
 cd ..
-
-# 7. 確認 MQTT Broker 就緒
-echo "[+] 正在確認 MQTT Broker (Port 1883) 是否完全就緒..."
-sleep 3 
-
-# 8. 最後才放行 AI Agent 與 MQTT 傳送腳本
-echo "[+] 所有基礎建設就緒，啟動 sentMQTT..."
-python3 ./Firmware/sentMQTT.py "${firmware[fwnum]}" &
 
 echo "[+] ======= 所有服務已成功一鍵全自動依序啟動！ ======="
 wait

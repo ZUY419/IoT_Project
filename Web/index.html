@@ -43,9 +43,15 @@
                     <button class="switch_show_button" onclick="switch_button_state(this)" value="AI Interaction">
                         AI 互動
                     </button>
+                    <button class="switch_show_button" onclick="switch_button_state(this)" value="Final Report">
+                        最終報告
+                    </button>
                 </section>
             </div>
-            
+
+            <!-- 階段進度列（跨分頁持續顯示） -->
+            <div class="stage_bar" id="stage_bar" style="display:none;"></div>
+
             <!-- 介面訊息顯示區 -->
             <section class="info_show">
                 <div class="info_title_block">
@@ -63,5 +69,7 @@
         </section>
     </article>
 
+    <!-- 通知 (Toast) 容器 -->
+    <div id="toast_root"></div>
 </body>
 </html>

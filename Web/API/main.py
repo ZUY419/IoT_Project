@@ -75,6 +75,43 @@ class StartPentestPayload(BaseModel):
     device_name: Optional[str] = None
 
 
+class ReportQuery(BaseModel):
+    device_name: Optional[str] = None
+
+
+def _sync_get_report(device_name: Optional[str] = None):
+    """讀取 workspace/reports/ 底下最新的 JSON 報告（可選用設備名稱過濾）。"""
+    project_root = util.get_folder().parent.parent
+    reports_dir = (
+        project_root / "Docker" / "ai" / "langchain" / "workspace" / "reports"
+    ).resolve()
+
+    if not reports_dir.is_dir():
+        return {"status": 404, "message": f"找不到報告資料夾: {reports_dir}", "report": None}
+
+    files = []
+    if device_name:
+        files = sorted(
+            reports_dir.glob(f"{device_name}_*.json"),
+            key=lambda p: p.stat().st_mtime, reverse=True,
+        )
+    # 指定設備找不到（或沒給設備名）→ 退回取整個資料夾最新的
+    if not files:
+        files = sorted(
+            reports_dir.glob("*.json"),
+            key=lambda p: p.stat().st_mtime, reverse=True,
+        )
+    if not files:
+        return {"status": 404, "message": "尚無任何報告，請先完成一次滲透測試。", "report": None}
+
+    try:
+        with open(files[0], "r", encoding="utf-8") as f:
+            report = json.load(f)
+        return {"status": 200, "report": report, "file": files[0].name}
+    except Exception as e:
+        return {"status": 500, "message": f"讀取報告失敗: {e}", "report": None}
+
+
 def _check_web_service_ready(url: str, timeout_sec: int = 30) -> bool:
     start_time = time.time()
     while time.time() - start_time < timeout_sec:
@@ -296,3 +333,12 @@ async def restart_ai():
         return await to_thread.run_sync(_sync_restart_ai)
     except Exception as e:
         return {"status": 500, "message": str(e)}
+
+
+@app.post("/api/pentest/get_report")
+async def get_report(payload: ReportQuery = None):
+    try:
+        device_name = payload.device_name if payload else None
+        return await to_thread.run_sync(_sync_get_report, device_name)
+    except Exception as e:
+        return {"status": 500, "message": str(e), "report": None}

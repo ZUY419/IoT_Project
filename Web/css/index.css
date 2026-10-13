@@ -579,3 +579,171 @@ div[class$="_section"] {
     font-size: 16px;
     opacity: 0.7;
 }
+
+/* ======================================================================
+   最終報告 (Final Report) 面板 —— 沿用專案棕色主題
+   ====================================================================== */
+.rpt_dashboard {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow-y: auto;
+    padding-right: 4px;
+    font-family: 'Fira Code', 'M PLUS Rounded 1c', 'Consolas', monospace;
+}
+
+.rpt_meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 20px;
+    color: #C08552;
+    font-size: 13px;
+    margin: 4px 2px 12px;
+}
+.rpt_meta b { color: #FFF8F0; }
+
+/* 摘要卡片 */
+.rpt_cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+    margin-bottom: 8px;
+}
+.rpt_card {
+    background-color: #1a1010;
+    border: 1px solid #C08552;
+    border-radius: 10px;
+    padding: 12px 14px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+}
+.rpt_card_n { font-size: 26px; font-weight: 700; color: #FFF8F0; }
+.rpt_card_l { font-size: 12px; color: #C08552; margin-top: 2px; }
+
+/* 結果分類長條 */
+.rpt_bar {
+    display: flex;
+    height: 26px;
+    border-radius: 7px;
+    overflow: hidden;
+    border: 1px solid #302020;
+    margin-bottom: 10px;
+    background-color: #0d0807;
+}
+.rpt_bar > div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #FFF8F0;
+    font-size: 12px;
+    font-weight: 700;
+    min-width: 0;
+}
+.rpt_seg_hit { background-color: #2A835F; }
+.rpt_seg_dos { background-color: #6B7280; }
+.rpt_seg_att { background-color: #B91C1C; }
+
+.rpt_legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: #e2e8f0; }
+.rpt_leg { display: inline-flex; align-items: center; gap: 6px; }
+.rpt_dot { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
+
+.rpt_kv { color: #C08552; font-size: 13px; margin: 8px 0; }
+.rpt_kv b { color: #FFF8F0; }
+
+/* Findings 可展開卡片 */
+.rpt_finding {
+    border: 1px solid #302020;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    background-color: #0d0807;
+    overflow: hidden;
+}
+.rpt_finding > summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.rpt_finding > summary::-webkit-details-marker { display: none; }
+.rpt_fid { font-weight: 700; color: #FFF8F0; font-family: 'Fira Code', monospace; font-size: 13.5px; }
+.rpt_grow { flex: 1; }
+.rpt_count { color: #C08552; font-size: 12px; }
+.rpt_finding_body { padding: 0 12px 12px; border-top: 1px solid #302020; }
+
+.rpt_pill {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+}
+.rpt_pill.rpt_hit { background-color: rgba(42, 131, 95, 0.2); color: #6ee7b7; border: 1px solid #2A835F; }
+.rpt_pill.rpt_dos { background-color: rgba(107, 114, 128, 0.2); color: #cbd5e1; border: 1px solid #6B7280; }
+.rpt_pill.rpt_att { background-color: rgba(185, 28, 28, 0.2); color: #fca5a5; border: 1px solid #B91C1C; }
+
+.rpt_tag {
+    font-size: 11px;
+    color: #fef08a;
+    background-color: #2a1817;
+    border: 1px solid #8C5A3C;
+    padding: 1px 8px;
+    border-radius: 5px;
+}
+.rpt_ok { color: #6ee7b7; font-weight: 700; }
+.rpt_no { color: #94a3b8; }
+
+/* ======================================================================
+   階段進度列 (Stage Bar) / 通知 (Toast) / 新報告紅點
+   ====================================================================== */
+.stage_bar {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 8px 14px;
+    margin: 0 2px;
+    background-color: #3a2420;
+    border: 1px solid #8C5A3C;
+    border-radius: 10px;
+}
+.stage_steps { display: flex; align-items: center; flex: 1; min-width: 0; }
+.stage_step {
+    width: 26px; height: 26px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background-color: #120a09; border: 2px solid #6B7280;
+    flex-shrink: 0; transition: all .25s ease;
+}
+.stage_num { font-size: 12px; font-weight: 700; color: #C08552; }
+.stage_step.stage_current { border-color: #C08552; background-color: #8C5A3C; box-shadow: 0 0 8px rgba(192,133,82,.6); }
+.stage_step.stage_current .stage_num { color: #FFF8F0; }
+.stage_step.stage_done { border-color: #2A835F; background-color: #2A835F; }
+.stage_step.stage_done .stage_num { color: #FFF8F0; }
+.stage_line { height: 3px; flex: 1; min-width: 10px; background-color: #6B7280; margin: 0 4px; border-radius: 2px; }
+.stage_line.stage_line_done { background-color: #2A835F; }
+.stage_label { color: #FFF8F0; font-size: 14px; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+
+/* 新報告紅點 */
+.switch_show_button { position: relative; }
+.ready_dot {
+    position: absolute; top: 6px; right: 8px;
+    width: 9px; height: 9px; border-radius: 50%;
+    background-color: #ef4444; box-shadow: 0 0 6px #ef4444;
+}
+
+/* Toast 通知 */
+#toast_root {
+    position: fixed; right: 20px; bottom: 20px;
+    display: flex; flex-direction: column; gap: 10px; z-index: 9999;
+}
+.toast {
+    background-color: #1a1010; color: #FFF8F0;
+    border: 1px solid #2A835F; border-left: 4px solid #2A835F;
+    border-radius: 10px; padding: 12px 18px; max-width: 360px;
+    font-size: 14px; font-weight: 600;
+    box-shadow: 0 6px 20px rgba(0,0,0,.5);
+    opacity: 0; transform: translateX(20px); transition: all .3s ease;
+}
+.toast.show { opacity: 1; transform: translateX(0); }
