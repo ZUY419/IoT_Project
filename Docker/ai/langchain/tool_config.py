@@ -167,13 +167,11 @@ class PoCCommandsResponse(BaseModel):
 
 POC_CMDS_SCHEMA = PoCCommandsResponse.model_json_schema()
 
-
 # Stage 4：有 PoC 時，coder 把 PoC 改寫成「一個可執行檔」用
 class PoCFileResponse(BaseModel):
     language: str = Field("", description="python 或 bash")
     filename: str = Field("", description="輸出檔名，例如 poc_CVE-2024-3661.py")
     content: str = Field("", description="完整可執行的檔案內容")
     run_cmd: str = Field("", description="執行指令，例如 python3 poc_xxx.py")
-
 
 POC_FILE_SCHEMA = PoCFileResponse.model_json_schema()

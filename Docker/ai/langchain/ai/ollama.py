@@ -156,7 +156,7 @@ def call_ollama_json(
     target_model = model_name or DEFAULT_MODEL
     eff_timeout = timeout if timeout else OLLAMA_TIMEOUT
     log_info.AI_prompt(
-        f"[Model: {target_model}] System Prompt:\n{system_prompt[:250]}...\nUser Content:\n{user_content[:350]}..."
+        f"[Model: {target_model}] System Prompt:\n{system_prompt}\nUser Content:\n{user_content}"
     )
 
     # 1. 嘗試使用 LangChain ChatOllama + LCEL 鏈執行

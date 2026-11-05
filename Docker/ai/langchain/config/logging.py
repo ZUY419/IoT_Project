@@ -87,6 +87,18 @@ class log_info:
         log_info._send_to_fastapi("stage", payload)
 
     @staticmethod
+    def cve_progress(current, total, cve_id=None, status=None):
+        """回報漏洞驗證階段的「子進度」：目前測到第幾個 / 共幾個 CVE（網頁即時更新計數）。
+        payload: {"current":3,"total":12,"cve_id":"CVE-2020-25684","status":"testing"}
+        status: testing（開始測這顆）/ done（這顆測完）。"""
+        payload = json.dumps(
+            {"current": current, "total": total, "cve_id": cve_id, "status": status},
+            ensure_ascii=False,
+        )
+        print(f"[CVE_PROG] {current}/{total} {cve_id or ''} {status or ''}")
+        log_info._send_to_fastapi("cve_progress", payload)
+
+    @staticmethod
     def done(device=None, report_file=None):
         """回報整個滲透測試流程結束（網頁據此跳通知並自動載入最終報告）。
         payload: {"device":"DIR-880L","report_file":"DIR-880L_20261013_154943.md"}"""

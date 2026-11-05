@@ -23,6 +23,46 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+
+# =============================================================================
+# ⚠️【B1：把「黏在 URL 後面的 shell 注入字元」包進引號，根治假陽性】
+# 問題：execute_cli 走本機 /bin/sh -c。像
+#       curl -s http://192.168.0.1/x.htm?addr=;id;
+#   本機 shell 會依 ';' 拆成兩條：curl 送靶機（可能回 FAILNO SESSION＝失敗），
+#   然後 `id` 在「本機容器」執行 → 容器是 root → 吐出 uid=0(root)，造成假命中，
+#   而且那個 root 根本不是靶機的。
+# 修法：把「未加引號、且含 shell 特殊字元」的 http(s):// URL 整段用單引號包起來，
+#   讓 ';id;'、query 的 '&' 等都留在 URL 內、真的送進靶機，而不是被本機 shell 執行。
+#   這同時也修掉「URL query 的 & 未引號 → 被當背景執行」這個常見 bug。
+#   只動「黏在 URL token 上」的字元；指令與指令之間正常的空白分隔（如 `curl A && curl B`，
+#   && 前後有空白）不受影響，不會誤傷合法的多段探測。
+# =============================================================================
+# URL 中若出現這些字元，代表會被本機 shell 解讀 → 必須包進引號送進靶機
+_URL_SHELL_META = re.compile(r"[;&|<>`$()]")
+# 未被引號前綴的 http(s)://… 連續非空白字串（\S+ 自然吃到下一個空白為止）
+_UNQUOTED_URL = re.compile(r"""(?<!['"])(https?://\S+)""")
+
+
+def _quote_unsafe_urls(command: str):
+    """把未加引號又含 shell 特殊字元的 http(s) URL 整段包進單引號。
+    回傳 (新指令, 是否有改寫)。非 http 指令（nmap/dig/snmpwalk/python3…）不受影響。"""
+    if "http://" not in command and "https://" not in command:
+        return command, False
+
+    changed = False
+
+    def _repl(m):
+        nonlocal changed
+        url = m.group(1)
+        # 已含單引號的就不再包（避免破壞），但一般 URL 不會有單引號
+        if "'" not in url and _URL_SHELL_META.search(url):
+            changed = True
+            return "'" + url + "'"
+        return url
+
+    new_cmd = _UNQUOTED_URL.sub(_repl, command)
+    return new_cmd, changed
+
 TOOL_PACKAGE_MAP = {
     "dirb": "dirb",
     "gobuster": "gobuster",
@@ -111,6 +151,17 @@ def _split_product_version(query: str):
     return product_name, target_version
 
 
+def _looks_like_device_model(q: str) -> bool:
+    """判斷查詢是否『看起來是裝置型號』（如 DIR-601 / DAP-1360 / WRT54）。
+    用途：這類型號沒有版本號，但在 NVD 用『關鍵字搜尋』就查得到對應 CVE，
+    不該被『無版本號就跳過』的守衛擋掉。泛詞（http / lighttpd / dhcps）則回 False。
+    特徵：字母群 + (可有 -/_/空白) + 2 位以上數字，且不是已知 nmap 服務前綴。"""
+    s = (q or "").strip()
+    if not s or s.lower() in _NMAP_SERVICE_PREFIXES:
+        return False
+    return bool(re.search(r"[A-Za-z]{2,}[-_ ]?\d{2,}", s))
+
+
 def ensure_python_package(pkg_name: str, import_name: str = None) -> bool:
     """檢查 Python 套件是否已安裝（僅檢查，不再自動 pip 安裝）。
     套件應在 Dockerfile build 階段裝好；缺失時回 False 並印出明確訊息，
@@ -132,6 +183,14 @@ class PentestToolbox:
 
     def __init__(self, target_ip: str):
         self.target_ip = target_ip
+        # ⚠️【登入 session】登入成功後由程式存在這裡（字串如 "SID=abc; uid=xyz"），
+        #    execute_cli 會把它自動補進後續每一條 curl/wget（-b），讓驗證打到登入後端點。
+        #    登入本身跑在前面、此時仍為 None，所以登入請求不會被誤帶 cookie。
+        self.auth_cookie = None
+
+    def set_auth_cookie(self, cookie: str):
+        """登入成功後由流程呼叫，設定要帶進後續驗證指令的 cookie 字串。"""
+        self.auth_cookie = (cookie or "").strip() or None
 
     @staticmethod
     def ensure_tool_installed(cmd_name) -> bool:
@@ -773,10 +832,17 @@ class PentestToolbox:
 
         product_name, target_version = _split_product_version(query)
 
-        # version 拆不出 → 跳過 NVD（只用產品名會撈到海量不相關結果）
+        # version 拆不出時：
+        #   - 若查詢「看起來是裝置型號」(DIR-601 / DAP-1360) → 改用整串當關鍵字查 NVD（keywordSearch），
+        #     因為型號本來就沒有版本號，但 NVD 關鍵字搜尋查得到對應 CVE。
+        #   - 否則（http / lighttpd 這種泛詞）→ 仍跳過，避免撈到海量不相關結果。
         if not target_version:
-            log_info.info(f"⏭️ [NVD 跳過] 查詢 `{query}` 無明確版本號（product='{product_name}'），跳過以免撈到大量不相關結果。")
-            return f"（NVD 跳過：`{query}` 無明確版本號，未查詢。）"
+            if _looks_like_device_model(query):
+                log_info.info(f"🔎 [NVD] `{query}` 判定為裝置型號，改用關鍵字搜尋（型號本無版本號）。")
+                product_name, target_version = query, ""   # get_vulnerability_data 會以整串做 keywordSearch
+            else:
+                log_info.info(f"⏭️ [NVD 跳過] 查詢 `{query}` 無明確版本號（product='{product_name}'），跳過以免撈到大量不相關結果。")
+                return f"（NVD 跳過：`{query}` 無明確版本號，未查詢。）"
 
         try:
             from get_nvd import convert_to_markdown, get_vulnerability_data
@@ -825,6 +891,166 @@ class PentestToolbox:
             log_info.error(err)
             return err
 
+    # =========================================================================
+    # 🔐 登入 / 取得 session（由流程控制；7B 只在「程式抽不出表單」時被呼叫看 HTML）
+    # =========================================================================
+    # 登入「失敗」特徵：回應若出現這些字串，視為這組帳密沒過。
+    LOGIN_FAIL_HINTS = [
+        "incorrect", "invalid", "wrong password", "wrong username", "login failed",
+        "failno", "no session", "try again", "authentication failed", "auth failed",
+        "密碼錯誤", "帳號錯誤", "登入失敗", "登錄失敗", "錯誤的密碼",
+    ]
+
+    def _resolve_url(self, path_or_url: str) -> str:
+        """把相對路徑補成完整 URL（以 target_ip 為基底）。"""
+        u = (path_or_url or "").strip()
+        if not u:
+            return f"http://{self.target_ip}/"
+        if u.startswith("http://") or u.startswith("https://"):
+            return u
+        if u.startswith("/"):
+            return f"http://{self.target_ip}{u}"
+        return f"http://{self.target_ip}/{u}"
+
+    def _find_login_form(self, html: str, page_url: str):
+        """程式從 HTML 抽登入表單：找含 password 欄位的 <form>，回傳
+        {action_url, method, user_field, pass_field, hidden:{name:value}}；抽不到回 None。"""
+        if not ensure_python_package("beautifulsoup4", "bs4"):
+            return None
+        from bs4 import BeautifulSoup
+        try:
+            soup = BeautifulSoup(html or "", "html.parser")
+        except Exception:
+            return None
+
+        for form in soup.find_all("form"):
+            pass_field = None
+            user_field = None
+            hidden = {}
+            text_fields = []
+            for inp in form.find_all("input"):
+                name = inp.get("name") or inp.get("id")
+                if not name:
+                    continue
+                itype = (inp.get("type") or "text").lower()
+                if itype == "password" and pass_field is None:
+                    pass_field = name
+                elif itype == "hidden":
+                    hidden[name] = inp.get("value", "")
+                elif itype in ("text", "email", "tel", ""):
+                    text_fields.append(name)
+            if pass_field is None:
+                continue  # 沒有密碼欄 → 不是登入表單
+
+            # 帳號欄：優先名字像 user/name/login/account 的 text 欄，否則取第一個 text 欄
+            for cand in text_fields:
+                if re.search(r"user|name|login|acc|uid|id", cand, re.IGNORECASE):
+                    user_field = cand
+                    break
+            if user_field is None and text_fields:
+                user_field = text_fields[0]
+
+            action = form.get("action", "") or page_url
+            method = (form.get("method", "POST") or "POST").upper()
+            return {
+                "action_url": self._resolve_url(action if action else page_url),
+                "method": method if method in ("GET", "POST") else "POST",
+                "user_field": user_field,
+                "pass_field": pass_field,
+                "hidden": hidden,
+            }
+        return None
+
+    def attempt_login(self, creds: list, login_urls: list = None, llm_form_extractor=None) -> dict:
+        """流程控制的登入：找登入表單 → 逐組帳密送出 → 接住 cookie → 判斷成功。
+        creds: [{"user":..,"pass":..}, ...]（default_creds.json 的 credentials）。
+        login_urls: 候選登入頁（相對或絕對）；None 時用常見預設路徑。
+        llm_form_extractor: 可選 callable(html)->dict，程式抽不到表單時交給 7B 看 HTML。
+        回傳 {success, cookie, user, used_url, tried, reason}。"""
+        if not ensure_python_package("beautifulsoup4", "bs4"):
+            return {"success": False, "cookie": None, "tried": 0, "reason": "缺 beautifulsoup4"}
+
+        candidates = list(login_urls or [])
+        # 補上常見登入頁路徑（保序去重）
+        for d in ["/", "/login.htm", "/login.html", "/login.cgi", "/login.asp",
+                  "/cgi-bin/login", "/index.htm", "/index.html"]:
+            if d not in candidates:
+                candidates.append(d)
+
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+        tried = 0
+
+        for cand in candidates:
+            page_url = self._resolve_url(cand)
+            # 1) 抓登入頁
+            try:
+                sess0 = requests.Session()
+                r = sess0.get(page_url, headers=headers, timeout=10, verify=False)
+                html = r.text
+            except Exception as e:
+                log_info.info(f"   🔐 登入頁 {page_url} 無法取得：{e}，換下一個候選。")
+                continue
+
+            # 2) 抽表單（程式優先；抽不到才叫 7B）
+            form = self._find_login_form(html, page_url)
+            if not form and llm_form_extractor:
+                log_info.info(f"   🔐 {page_url} 程式抽不到登入表單，改請 7B 讀 HTML 協助。")
+                try:
+                    guess = llm_form_extractor(html[:4000]) or {}
+                    if guess.get("pass_field"):
+                        form = {
+                            "action_url": self._resolve_url(guess.get("action_url") or page_url),
+                            "method": (guess.get("method") or "POST").upper(),
+                            "user_field": guess.get("user_field"),
+                            "pass_field": guess.get("pass_field"),
+                            "hidden": {},
+                        }
+                except Exception as e:
+                    log_info.warn(f"   🔐 7B 解析登入表單失敗：{e}")
+            if not form or not form.get("pass_field"):
+                continue  # 這頁沒有可用登入表單 → 換下一個候選
+
+            log_info.info(f"   🔐 在 {page_url} 找到登入表單 → action={form['action_url']} "
+                          f"({form['method']}, user={form.get('user_field')}, pass={form['pass_field']})")
+
+            # 3) 逐組帳密嘗試
+            for c in creds:
+                user = c.get("user", "")
+                pwd = c.get("pass", "")
+                tried += 1
+                data = dict(form.get("hidden") or {})
+                if form.get("user_field"):
+                    data[form["user_field"]] = user
+                data[form["pass_field"]] = pwd
+                try:
+                    sess = requests.Session()
+                    sess.get(page_url, headers=headers, timeout=10, verify=False)  # 先拿初始 cookie/CSRF
+                    if form["method"] == "GET":
+                        resp = sess.get(form["action_url"], params=data, headers=headers, timeout=10, verify=False)
+                    else:
+                        resp = sess.post(form["action_url"], data=data, headers=headers, timeout=10, verify=False)
+                except Exception as e:
+                    log_info.info(f"   🔐 嘗試 {user or '(空)'}/{pwd or '(空)'} 連線失敗：{e}")
+                    continue
+
+                body = (resp.text or "").lower()
+                failed = any(h in body for h in [x.lower() for x in self.LOGIN_FAIL_HINTS])
+                cookie_pairs = [f"{k}={v}" for k, v in sess.cookies.get_dict().items()]
+                has_cookie = bool(cookie_pairs)
+
+                # 成功判定（保守）：狀態 < 400、無失敗字串、且拿到 session cookie
+                if resp.status_code < 400 and not failed and has_cookie:
+                    cookie_str = "; ".join(cookie_pairs)
+                    log_info.info(f"   ✅ 登入成功：{user or '(空)'}/{pwd or '(空)'} @ {form['action_url']} "
+                                  f"→ cookie: {cookie_str[:80]}")
+                    return {"success": True, "cookie": cookie_str, "user": user,
+                            "used_url": form["action_url"], "tried": tried, "reason": "ok"}
+
+            log_info.info(f"   🔐 {page_url} 的表單試完 {len(creds)} 組帳密皆未過，換下一個候選頁。")
+
+        return {"success": False, "cookie": None, "tried": tried,
+                "reason": "找不到可用登入表單或所有帳密皆失敗"}
+
     def execute_cli(self, command, timeout: int = 120) -> str:
         """執行 Linux CLI 滲透指令。執行前檢查工具是否存在（不自動安裝）。"""
         log_info.tool(command)
@@ -850,6 +1076,25 @@ class PentestToolbox:
             installed = PentestToolbox.ensure_tool_installed(main_binary)
             if not installed:
                 return f"（錯誤：系統缺乏工具 `{main_binary}`，請在 Dockerfile 的 apt-get install 清單補上後 rebuild。此次指令未執行。）"
+
+        # ⚠️【B1】執行前把「黏在 URL 後面的 shell 注入字元」包進引號，
+        #   避免 ;id 之類在本機容器（root）偷跑造成假命中。改寫了就記 log 供稽核。
+        command, _rewritten = _quote_unsafe_urls(command)
+        if _rewritten:
+            log_info.warn(f"🛡️ [B1] 已將 URL 內的 shell 特殊字元包進引號，確保 payload 送往靶機而非本機執行：{command}")
+
+        # 🔐【登入 session】登入成功後，把 cookie 自動補進 curl/wget（-b），
+        #    讓驗證指令打到「登入後」的端點；已自帶 cookie 的指令不重複加。
+        if self.auth_cookie and main_binary in ("curl", "wget"):
+            has_cookie_flag = bool(re.search(r"(^|\s)(-b|--cookie)(\s|=)", command)) \
+                or bool(re.search(r"[Cc]ookie\s*:", command))
+            if not has_cookie_flag:
+                safe_cookie = self.auth_cookie.replace("'", "")  # 去單引號避免破壞 shell 引號
+                if main_binary == "curl":
+                    command = f"curl -b '{safe_cookie}' " + command[len("curl"):].lstrip()
+                else:  # wget
+                    command = f"wget --header='Cookie: {safe_cookie}' " + command[len("wget"):].lstrip()
+                log_info.info(f"🔐 已帶入登入 session 執行驗證指令。")
 
         try:
             result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=timeout)

@@ -1,6 +1,6 @@
 # Docker/ai/langchain/report.py
 # ----------------------------------------------------------------------------
-# Stage 5：把 share_memory 彙整成 Markdown 滲透測試報告。
+# Stage 6（執行順序）：把 share_memory 彙整成 Markdown + JSON 滲透測試報告。
 # 每個 CVE 一節：成功 → 怎麼成功、哪條 payload；失敗 → 試過哪些、為何判定失敗。
 # 報告主體由程式組裝（不靠 7B，保證資料真實），只在「總結段」可選擇讓 7B 潤飾。
 # ----------------------------------------------------------------------------
@@ -20,6 +20,42 @@ REPORT_DIR = Path(os.getenv("REPORT_DIR", util.get_device_data_dir() / "reports"
 # 檔名已含設備名稱（{firmware}_{時間戳}.json），網頁只要列這一個資料夾即可，
 # 不必再進到各設備子資料夾用設備名稱去找。
 JSON_REPORT_DIR = Path(os.getenv("JSON_REPORT_DIR", util.WORKSPACE_DIR / "reports"))
+
+# =============================================================================
+# 「為什麼判定成功」的特徵對照表。
+# key = main.py SUCCESS_KEYWORDS 的硬條件字串（小寫比對）；value = 它在回應中出現
+# 代表什麼、證明了哪一類利用成立。報告用這張表把「程式比對到的字串」翻成人看得懂的
+# 結論，讓每一筆「成功」都有可稽核的理由，而非 LLM 自稱。
+# =============================================================================
+SUCCESS_EVIDENCE_MEANING = {
+    "<exec-nonce>": "回應中原封出現我方注入的『執行回顯驗證碼』→ 指令**真的在靶機上被執行**"
+                    "（且非伺服器原樣反射，因驗證碼需經 shell 串接才會還原）→ 證明**遠端命令執行／注入**成立。"
+                    "此為最強證據，近乎零假陽性。",
+    "root:x:0:0": "回應中出現 /etc/passwd 的 root 帳號列（`root:x:0:0`）→ 成功讀出系統檔案，"
+                  "證明**任意檔案讀取／路徑穿越**成立。",
+    "uid=0(root)": "回應中出現 `uid=0(root)` → `id` 指令以 root 身分回顯，"
+                   "證明**遠端命令執行 (RCE)** 成立，且取得最高權限。",
+    "gid=0(": "回應中出現 `gid=0(` → `id` 指令群組回顯，證明**遠端命令執行**成立。",
+    "sh-4.$": "回應中出現 Bash 互動提示字元（`sh-4.x$`）→ 已取得遠端互動式 shell。",
+    "sh-5.$": "回應中出現 Bash 互動提示字元（`sh-5.x$`）→ 已取得遠端互動式 shell。",
+    "you have an error in your sql syntax":
+        "資料庫回報 SQL 語法錯誤 → 輸入未經過濾被帶入查詢，證明**SQL 注入**成立。",
+    "mysql_fetch": "回應洩漏 MySQL 函式錯誤特徵 → 資料庫錯誤外洩，屬 **SQL 注入／錯誤型資訊洩漏**。",
+    "ora-01756": "回應含 Oracle 錯誤碼 `ORA-01756` → 資料庫錯誤外洩，屬 **SQL 注入**。",
+}
+
+
+def _explain_evidence(keywords) -> list:
+    """把 main.py 記錄下的命中特徵字串，翻成報告用的「為什麼成功」說明列。
+    對照不到的字串也原樣列出（至少說明比對到了什麼），確保不漏證據。"""
+    lines = []
+    for kw in (keywords or []):
+        meaning = SUCCESS_EVIDENCE_MEANING.get(str(kw).lower())
+        if meaning:
+            lines.append(f"- {meaning}")
+        else:
+            lines.append(f"- 回應中比對到成功特徵字串 `{kw}`。")
+    return lines
 
 
 def _fmt_ports(sm: dict) -> str:
@@ -58,7 +94,7 @@ def _fmt_web(sm: dict) -> str:
 def _fmt_cve_section(sm: dict) -> str:
     attempts = sm.get("exploit_attempts", [])
     if not attempts:
-        return "_（Stage 4 未驗證任何 CVE —— 可能是 RAG/NVD 未檢索到對應 CVE）_"
+        return "_（Stage 5 未驗證任何 CVE —— 可能是 RAG/NVD 未檢索到對應 CVE）_"
 
     blocks = []
     for rec in attempts:
@@ -85,7 +121,7 @@ def _fmt_cve_section(sm: dict) -> str:
 
         desc = (rec.get("description") or "").strip()
         if desc:
-            b.append(f"- **漏洞描述**：{desc[:400]}")
+            b.append(f"- **漏洞描述**：{desc}")
 
         if skipped_dos:
             b.append("")
@@ -94,6 +130,28 @@ def _fmt_cve_section(sm: dict) -> str:
                      f"建議由人員在受控環境中另行評估。")
             blocks.append("\n".join(b))
             continue
+
+        # 真的成功 → 說明「為什麼判定成功」：這是程式硬條件比對到的客觀證據，可稽核、非 LLM 自稱
+        if success:
+            ev_kws = rec.get("success_evidence", [])
+            ev_snip = (rec.get("success_snippet") or "").strip()
+            b.append("")
+            b.append("**為什麼判定成功：**")
+            b.append("")
+            expl = _explain_evidence(ev_kws)
+            if expl:
+                b.extend(expl)
+            else:
+                b.append("- 回應命中預設的成功硬條件（程式比對），詳見下方回應節錄。")
+            b.append("")
+            b.append("> 判定依據為**程式硬條件比對**（非 LLM 自我宣稱）：回應中必須實際出現上述特徵字串"
+                     "才會判成功，因此此結論可重現、可稽核。")
+            if ev_snip:
+                b.append("")
+                b.append("**回應中的關鍵證據片段：**")
+                b.append("```")
+                b.append(ev_snip)
+                b.append("```")
 
         if success and rec.get("success_cmd"):
             b.append("")
@@ -120,9 +178,10 @@ def _fmt_cve_section(sm: dict) -> str:
             b.append("| # | 指令 | 判定 | 回應節錄 |")
             b.append("|---|---|---|---|")
             for a in atts:
-                cmd = (a.get("cmd", "") or "").replace("|", "\\|")[:80]
+                # 完整顯示，不截斷（僅處理表格安全字元：跳脫 | 與換行）
+                cmd = (a.get("cmd", "") or "").replace("|", "\\|").replace("\n", " ")
                 judged = "命中" if a.get("judged_success") else "未命中"
-                exc = (a.get("response_excerpt", "") or "").replace("|", "\\|").replace("\n", " ")[:80]
+                exc = (a.get("response_excerpt", "") or "").replace("|", "\\|").replace("\n", " ")
                 b.append(f"| {a.get('n','')} | `{cmd}` | {judged} | {exc} |")
 
         if not success:
@@ -206,13 +265,13 @@ def generate_markdown_report(sm: dict, target_ip: str) -> str:
 
 ---
 
-## 三、Web 端點分析（Stage 3）
+## 三、Web 端點分析（Stage 2）
 
 {_fmt_web(sm)}
 
 ---
 
-## 四、漏洞驗證詳情（Stage 4）
+## 四、漏洞驗證詳情（Stage 5）
 
 {_fmt_cve_section(sm)}
 
@@ -248,13 +307,20 @@ def generate_markdown_report(sm: dict, target_ip: str) -> str:
             "method": r.get("method"),            # poc / llm / None
             "description": (r.get("description") or "").strip(),
             "success_cmd": r.get("success_cmd"),
+            # 為什麼成功：命中的硬條件特徵 + 人類可讀說明 + 回應中的證據片段（非 LLM 自稱）
+            "success_evidence": r.get("success_evidence", []),
+            "success_reason": [s[2:] if s.startswith("- ") else s
+                               for s in _explain_evidence(r.get("success_evidence", []))] if r.get("success") else [],
+            "success_snippet": (r.get("success_snippet") or ""),
             "attempts": [
                 {
                     "n": a.get("n"),
                     "cmd": a.get("cmd", ""),
                     "judged_success": bool(a.get("judged_success")),
                     "is_poc": bool(a.get("is_poc")),
-                    "response_excerpt": (a.get("response_excerpt") or "")[:500],
+                    "response_excerpt": (a.get("response_excerpt") or ""),
+                    "evidence_keywords": a.get("evidence_keywords", []),
+                    "evidence_snippet": (a.get("evidence_snippet") or ""),
                 }
                 for a in r.get("attempts", [])
             ],
