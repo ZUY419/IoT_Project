@@ -1,52 +1,29 @@
 # Docker/ai/langchain/main.py
-# ============================================================================
-# PentestGPT v2 — SOP 固定流程版 (Deterministic SOP Edition)
-# ----------------------------------------------------------------------------
-# 設計原則：流程決策全部由程式碼的 for 迴圈控制，7B 模型只在三個「局部翻譯」
-# 任務被呼叫，碰不到任何流程決策，藉此消除小模型亂跳、鬼打牆、幻覺收工的問題。
-#
-#   7B 的三個（且唯一的）工作：
-#     1. parse_tool_output()  —— 把工具亂 log 解析成結構化欄位
-#     2. generate_poc_cmds()  —— 讀 CVE 描述/PoC，產生驗證指令
-#     3. report 階段的文字潤飾（在 report.py）
-#
-#   六階段 SOP（依「實際執行順序」編號，全部窮舉，不問 AI 要不要做）：
-#     Stage 1  資產偵察    nmap（已是 SOP）                              [stage1_recon]
-#     Stage 2  Web 列舉    對每個「內部」端點各分析一次，外部網址自動跳過   [stage3_web_enum]
-#     Stage 3  裝置指紋    主動探測 HNAP/UPnP/標頭，抽真實裝置資訊         [_fingerprint_device]
-#     Stage 4  漏洞檢索    對每個已知 service 各打一次 RAG（查無則 NVD 備援）[stage2_vuln_search]
-#     Stage 5  漏洞驗證    每個 CVE 產 N 次 payload 逐一執行，硬條件判定成敗 [stage4_verify]
-#     Stage 6  產生報告    彙整成 Markdown + JSON                         [stage5_report]
-#
-#   ⚠️ 函式名稱中的數字（stage2_/stage3_/stage4_）是「開發期的歷史命名」，
-#      與上面的執行順序編號不同，這是刻意保留的（避免大改函式名）。
-#      對外顯示（log / 網頁）一律用上面的「執行順序」編號。
-# ============================================================================
 
 import json
 import os
 import re
+import time
 from dotenv import load_dotenv
 
 import util
 from config.config import TARGET_IP
 from config.logging import log_info
-from tools import PentestToolbox, _looks_like_device_model
-from ai.parsing import parse_tool_output
+from tools import PentestToolbox
 from ai.generation import (
-    generate_poc_cmds,
     generate_next_poc_cmd,
     extract_poc_scripts,
     adapt_poc_to_file,
     classify_cve,
     make_exec_nonce,
+    REPORT_ONLY_CLASSES,
 )
 import report as report_mod
 
 load_dotenv()
 
 # ---- 可調參數（可用環境變數覆寫）----
-POC_ATTEMPTS_PER_CVE = int(os.getenv("POC_ATTEMPTS_PER_CVE", "5"))   # 每個 CVE 驗證幾次
+POC_ATTEMPTS_PER_CVE = int(os.getenv("POC_ATTEMPTS_PER_CVE", "5"))    # 每個 CVE 驗證幾次
 CVSS_MIN = float(os.getenv("CVSS_MIN", "0.0"))                        # 報告收錄的 CVSS 下限（0 = 全收）
 MAX_ENDPOINTS = int(os.getenv("MAX_ENDPOINTS", "15"))                 # Web 端點最多分析幾個，避免爆量
 # 回應節錄長度：寫進 share_memory / 報告的 HTTP/HTML 回應保留幾個字元。
@@ -61,24 +38,12 @@ RESP_EXCERPT_LEN = int(os.getenv("RESP_EXCERPT_LEN", "4000"))
 SUCCESS_KEYWORDS = [
     "root:x:0:0",            # /etc/passwd 真的被讀出來
     "uid=0(root)", "gid=0(", # id 命令回顯 → 命令執行成功
-    # ⚠️【重大修正】拿掉 "/bin/sh:" 與 "/bin/bash" ——
-    #   這兩個會撞到工具缺失的錯誤訊息 "/bin/sh: 1: wget: not found"，
-    #   導致「工具沒裝」被誤判成「漏洞命中」。
     "sh-4.$", "sh-5.$",      # bash 互動 shell prompt（真的拿到 shell 才會有）
     "you have an error in your sql syntax",  # SQL 報錯（完整句）
     "mysql_fetch", "ora-01756",              # DB 錯誤特徵
-    # ⚠️【重大修正：移除 HNAP 特徵字】原本這裡放了
-    #   getdevicesettingsresponse / purenetworks.com/hnap1 / <firmwareversion> / <modelname>，
-    #   但那段 XML 是這台路由器「本來就會回」的東西（就是 HNAP 未授權洩漏本身），
-    #   不是「某個 CVE 被攻破」的證據。回饋迴圈只要順手 curl 了 /HNAP1/，
-    #   就會讓『當下正在驗的任何 CVE』被誤判成功（你看到的 CVE-2023-43197 假陽性）。
-    #   HNAP 洩漏已由指紋階段單獨記成 disclosure_findings 並寫進報告，
-    #   所以這裡拿掉完全不會漏掉那個發現，只是不再冤枉掛到別的 CVE 上。
-    #   本清單只保留「CVE-agnostic 的真實攻破證據」：讀到 passwd、命令回顯、SQL 報錯、真 shell。
 ]
 
 # 明確代表「失敗/無效」的回應特徵。
-# ⚠️【新增】工具缺失、shell 執行錯誤、空輸出 → 一律判失敗，絕不算命中。
 FAILURE_MARKERS = [
     "❌", "失敗", "connection reset", "connection refused",
     "timed out", "timeout", "could not resolve", "no route to host",
@@ -86,18 +51,84 @@ FAILURE_MARKERS = [
     "not found", "command not found", "no such file",   # 工具缺失（wget/nc/host not found）
     "/bin/sh:",                                          # shell 執行層錯誤
     "指令執行成功，但無文字輸出",                          # 空輸出不算命中
-    # ⚠️【A：認證／session 失敗特徵，根治假陽性】
-    #   例如靶機回 "FAILNO SESSION uid=0(root)..." 時——前半是靶機說「沒 session、請求被拒」，
-    #   後半的 uid=0 往往是本機容器自己的 id 漏出來的（見 tools.py B1）。
-    #   FAILURE_MARKERS 會「先判」，命中就直接判失敗，贏過後面的 root 關鍵字。
-    #   這裡只收「成功的命令執行輸出絕不會出現」的認證拒絕字串，保守不誤殺：
-    #   刻意不收 access denied / unauthorized / forbidden（可能出現在合法檔案列舉輸出中）。
     "no session", "failno session", "session expired", "invalid session",
     "session timeout", "need login", "please login", "login required", "not logged in",
 ]
 
-# ⚠️【新增】DoS 類漏洞的描述特徵。偵測到就「跳過不實際攻擊」，只在報告記錄，
-# 避免把靶機服務打崩導致後續測試無法進行（這也是真實滲透測試對待 DoS 的專業作法）。
+# =============================================================================
+# ⏱️【盲注時間差判定】
+# 有些指令注入是「盲注」：指令會在靶機執行，但輸出不回顯到 HTTP 回應（例如 Netgear
+# boardData*.php 的 CVE-2016-1555——回應只回表單頁，看不到 id/echo 的結果）。此時
+# nonce / uid=0 這種「看回顯」的判定永遠不會中。
+# 解法：注入 `sleep N`，量「這條指令實際花多久」。若耗時 ≥ N*0.7 秒，代表 sleep 真的在
+# 靶機上被執行 → 盲注命中。耗時來源有二，任一達標即可：
+#   (a) 執行端實測（time.perf_counter 包住 execute_cli，最可靠，不靠 LLM 加參數）
+#   (b) 指令自帶 curl -w 'OOB_SECONDS=%{time_total}' 印在回應裡的秒數（generation.py 的 T3 模板）
+# =============================================================================
+_SLEEP_PROBE_RE = re.compile(r"\bsleep\s+(\d+)")
+_OOB_SECONDS_RE = re.compile(r"OOB_SECONDS=([0-9.]+)")
+# 小於這個秒數的 sleep 不採信（和網路抖動分不開）；可用環境變數調。
+BLIND_SLEEP_MIN = float(os.getenv("BLIND_SLEEP_MIN", "3"))
+
+def _judge_blind_timing(command: str, elapsed: float = None, response: str = "") -> bool:
+    """盲注時間差判定：指令若注入了 sleep N，且（執行端實測耗時 或 回應裡的 OOB_SECONDS）
+    ≥ N*0.7 秒，代表 sleep 真的在靶機執行 → 判盲注命中。都沒達標回 False。
+    command 沒有 sleep、或 sleep 秒數太短時直接回 False，不會誤判一般指令。"""
+    m = _SLEEP_PROBE_RE.search(command or "")
+    if not m:
+        return False
+    want = int(m.group(1))
+    if want < BLIND_SLEEP_MIN:
+        return False
+    threshold = want * 0.7
+    # (a) 執行端實測耗時（最可靠）
+    if elapsed is not None and elapsed >= threshold:
+        return True
+    # (b) curl -w 印在回應裡的 OOB_SECONDS=秒數
+    mo = _OOB_SECONDS_RE.search(response or "")
+    if mo:
+        try:
+            if float(mo.group(1)) >= threshold:
+                return True
+        except ValueError:
+            pass
+    return False
+
+# =============================================================================
+# ♻️【同注入點去重】
+# 問題：CVE-2016-1555 / CVE-2017-18805 / CVE-2017-18806 都是「Netgear 指令注入」，
+# 且 agent 對它們都用同一條 boardDataWW.php + macAddress payload。只要該 sink 可注入，
+# 三筆都會因同一個 sleep 延遲而「命中」——但實際只證明了【一個】注入點。若全記成獨立
+# 利用，報告會灌水。
+# 解法：為每次成功算出「注入點簽章」= 正規化端點 + 漏洞類別。同一簽章只算一次獨立命中，
+# 其餘標成 affected-by-version（受影響、未獨立驗證），並指回標準歸屬 CVE。
+#   - boardData*.php（WW/NA/102/103/JP）是同一個洞 → 正規化成同一 key。
+#   - 該 sink 的標準歸屬＝CVE-2016-1555（有公開 PoC、未授權、描述明確點名此端點）。
+# =============================================================================
+_BOARDDATA_RE = re.compile(r"/boardData\w*\.php", re.IGNORECASE)
+_URLPATH_RE = re.compile(r"""https?://[^/\s'"]+(/[^\s'"?]*)""")
+
+# 已知注入點的標準歸屬 CVE：此 sink 命中時，獨立利用一律歸給這個 CVE。
+_CANONICAL_CVE_FOR_SIG = {
+    "cmd_injection@/boardData*.php": "CVE-2016-1555",
+}
+
+def _injection_signature(command: str, vuln_class: str = "") -> str:
+    """從成功指令抽出『注入點簽章』＝正規化端點路徑 + 漏洞類別。
+    同一簽章代表打的是同一個洞（所有 boardData*.php 命令注入歸為一個）。
+    抽不出端點時回空字串（代表無法判定，不做去重）。"""
+    if not command:
+        return ""
+    if _BOARDDATA_RE.search(command):           # boardData 家族一律收斂成同一 key
+        path = "/boardData*.php"
+    else:
+        m = _URLPATH_RE.search(command)
+        if not m:
+            return ""
+        path = m.group(1).rstrip("/") or "/"
+    return f"{vuln_class or 'generic'}@{path}"
+
+# 避免把靶機服務打崩導致後續測試無法進行。
 DOS_KEYWORDS = [
     "denial of service", "denial-of-service", "(dos)", " dos ",
     "crash", "buffer overflow", "out-of-memory", "out of memory",
@@ -105,36 +136,21 @@ DOS_KEYWORDS = [
     "拒絕服務", "崩潰", "耗盡",
 ]
 
-
 def _is_dos_cve(cve: dict) -> bool:
-    """用 CVE 描述關鍵字判斷是否為 DoS 類（程式判斷，不靠 7B）。"""
+    """
+    用 CVE 描述關鍵字判斷是否為 DoS 類 (程式碼判斷)。
+    """
     desc = (cve.get("description") or "").lower()
     return any(k in desc for k in DOS_KEYWORDS)
-
-
-_VENDOR_PREFIX_RE = re.compile(
-    r"(?i)^(d[-\s]?link|tp[-\s]?link|netgear|cisco|zyxel|huawei|tenda|asus|linksys|ubiquiti|mikrotik)\s+")
-
-
-def _nvd_family_keyword(model_query: str) -> str:
-    """把型號變體正規化成『NVD 查得到的家族名』。
-    例：DIR-601B1 / DIR601B1 / DIR 601B1 / D-Link DIR-601B1 / DIR601 / DIR 601 → 一律 DIR-601。
-    作法：去廠商前綴 → 去硬體版號後綴(B1/A1…) → 分隔符統一成連字號(DIR601/DIR 601 → DIR-601)。
-    NVD 的描述用的是連字號型號(DIR-601)，所以統一成這個形式命中率最高。"""
-    s = _VENDOR_PREFIX_RE.sub("", (model_query or "").strip())
-    s = re.sub(r"(?i)[\s_-]*[A-Z]\d{1,2}$", "", s).strip()   # 去硬體版號後綴 B1/A1…
-    s = s.replace(" ", "-")                                   # DIR 601 → DIR-601
-    s = re.sub(r"([A-Za-z])(\d)", r"\1-\2", s)                # DIR601 → DIR-601
-    s = re.sub(r"-+", "-", s).strip("-")
-    return s
-
 
 # 預設帳密清單檔（與 main.py 同目錄）。登入環節逐組「直接全試」。
 DEFAULT_CREDS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "default_creds.json")
 
-
 def _load_default_creds() -> list:
-    """載入 default_creds.json 的 credentials 清單；讀不到回空清單。"""
+    """
+    載入 default_creds.json 的 credentials 清單；
+    讀不到回空清單。
+    """
     try:
         with open(DEFAULT_CREDS_FILE, encoding="utf-8") as f:
             data = json.load(f)
@@ -151,9 +167,11 @@ def _load_default_creds() -> list:
 class PentestSOP:
 
     def __init__(self, reset_memory: bool = True):
+        """初始化滲透測試 SOP：綁定目標 IP、建立工具箱與記憶體，並確保 share_memory 必要鍵存在。
+        reset_memory=True 會清掉上一輪的 share_memory（換一台設備重新開跑時用）。"""
         self.target_ip = TARGET_IP
         # 目前這顆 CVE 的「執行回顯驗證碼」marker（可執行類漏洞用）；
-        # 回應若出現它＝指令真的在靶機上執行了（最強命中條件，非 LLM 自稱）。
+        # 回應若出現它 = 指令真的在靶機上執行了（最強命中條件，非 LLM 自稱）。
         self._active_nonce = None
         self.net_tools = PentestToolbox(self.target_ip)
         self.mem = util.LangChainPentestMemory(target_ip=self.target_ip, reset=reset_memory)
@@ -163,6 +181,7 @@ class PentestSOP:
 
     # ------------------------------------------------------------------
     def _ensure_sm_keys(self):
+        """確保 share_memory 內各階段會用到的鍵都存在（缺的給預設空值），避免後續 KeyError。"""
         self.sm = util.get_share_memory()
         self.sm.setdefault("ports", {"TCP": [], "UDP": []})
         self.sm.setdefault("web_footprints", {})
@@ -173,24 +192,30 @@ class PentestSOP:
         util.update_share_memory(self.sm)
 
     def _reload(self):
+        """從磁碟重新載入 share_memory 到 self.sm（工具會直接改磁碟，讀之前先同步最新狀態）。"""
         self.sm = util.get_share_memory()
 
     def _save(self):
+        """把目前 self.sm 寫回磁碟，並同步記一份到 log。"""
         util.update_share_memory(self.sm)
         log_info.share_memory(self.sm)
 
     @staticmethod
     def _clean_service_query(service: str, version: str) -> str:
-        """把 service/version 清成乾淨查詢字串：剝掉括號雜質與 port 描述。"""
+        """
+        把 service/version 清成乾淨查詢字串：剝掉括號雜質與 port 描述。
+        """
         raw = f"{service} {version}".strip()
-        raw = re.sub(r"\([^)]*\)", " ", raw)                       # 去括號內容
-        raw = re.sub(r"(?i)\bport\b.*", " ", raw)                  # 去 port 描述
+        raw = re.sub(r"\([^)]*\)", " ", raw)                          # 去括號內容
+        raw = re.sub(r"(?i)\bport\b.*", " ", raw)                     # 去 port 描述
         raw = re.sub(r"(?i)service detection performed.*", " ", raw)  # 去 nmap 雜訊
         raw = re.sub(r"\s+", " ", raw).strip()
         return raw
 
     def _is_internal_url(self, url: str) -> bool:
-        """只接受指向 target IP（或相對路徑）的端點，外部網址一律跳過。"""
+        """
+        只接受指向 target IP（或相對路徑）的端點，外部網址一律跳過。
+        """
         u = (url or "").strip()
         if not u:
             return False
@@ -198,10 +223,10 @@ class PentestSOP:
             return self.target_ip in u
         return True  # 相對路徑視為內部
 
-    # ==================================================================
-    # Stage 1（執行順序）：資產偵察 — nmap SOP  [def stage1_recon]
-    # ==================================================================
     def stage1_recon(self):
+        """
+        [ State 1 ] 資產偵查 ( nmap SOP )：做 UDP 跟 TCP 的 Port 偵查
+        """
         log_info.info("═══ Stage 1：資產偵察 (nmap SOP) ═══")
         self.net_tools.nmap_scan_tcp()
         self.net_tools.nmap_scan_udp()
@@ -212,186 +237,10 @@ class PentestSOP:
         udp_n = len(ports.get("UDP", []))
         log_info.info(f"✅ Stage 1 完成：TCP {tcp_n} 埠 / UDP {udp_n} 埠")
 
-    # ==================================================================
-    # Stage 4（執行順序）：漏洞檢索 — 對每個已知 service 窮舉 RAG，查無則 NVD 備援  [def stage2_vuln_search]
-    # ==================================================================
-    @staticmethod
-    def _is_real_version(version: str) -> bool:
-        """判斷版本欄位是不是『真的有版本資訊』。
-        排除 unknown、空值、nmap 的雜訊字串（Service detection performed...）。"""
-        v = (version or "").strip().lower()
-        if not v or v == "unknown":
-            return False
-        if "service detection performed" in v or "please report" in v:
-            return False
-        return True
-
-    @staticmethod
-    def _model_query_variants(model: str, vendor_short: str = "") -> list:
-        """從指紋型號展開多組查詢變體，提高 CVE 檢索命中率。
-        重點場景：HNAP 回報硬體版號（如 DIR-601B1），但 CVE 以市場型號收錄（DIR-601L / DIR-601）。
-        作法：
-          1. 原字串（DIR-601B1）
-          2. 去掉『硬體版號後綴』(結尾的 字母+數字，如 B1/A1/C1；L/K 這種市場字尾不動) → 家族名 DIR-601
-             —— DIR-601 是 DIR-601L 的子字串，NVD/RAG 查 DIR-601 就能撈到 DIR-601L 的 CVE。
-          3. 分隔符變體（DIR601 / DIR 601）
-          4. 加廠商前綴（D-Link DIR-601 / D-Link DIR-601B1）
-        回傳保序去重後的變體清單。"""
-        m = (model or "").strip()
-        if not m:
-            return []
-        variants = [m]
-        # 去硬體版號後綴：結尾的「(rev) 字母+1~2位數字」，如 B1/A1/C1/ rev B1。
-        # 只動『字母緊接數字』的尾巴；DIR-868L 這種單一字母市場字尾（後面沒數字）不會被誤砍。
-        base = re.sub(r"(?i)[\s_-]*(rev\.?\s*)?[A-Z]\d{1,2}$", "", m).strip()
-        if base and base.lower() != m.lower():
-            variants.append(base)
-
-        # 對 原字串 與 家族名 都做分隔符變體
-        expanded = []
-        for v in variants:
-            expanded.append(v)
-            if "-" in v:
-                expanded.append(v.replace("-", ""))    # DIR601
-                expanded.append(v.replace("-", " "))    # DIR 601
-
-        # 加廠商前綴（放最後，當補充）
-        vs = (vendor_short or "").strip()
-        if vs:
-            for v in list(dict.fromkeys([m, base])):
-                if v and vs.lower() not in v.lower():
-                    expanded.append(f"{vs} {v}")
-
-        # 保序去重，濾掉太短的
-        out = []
-        for v in expanded:
-            v = (v or "").strip()
-            if len(v) >= 4 and v.lower() not in [x.lower() for x in out]:
-                out.append(v)
-        return out
-
-    def _build_stage2_targets(self) -> list:
-        """只挑『真實服務』當檢索目標：
-          1. 有明確版本號的 port 服務（例如 dnsmasq 2.41、MiniUPnP 1.4）
-          2. Web 分析挖到的廠商與 server 軟體（例如 D-Link、lighttpd 1.4.28）
-        跳過 http unknown / dhcps / netbios-ns 這種只有服務類型、沒有產品的髒查詢。"""
-        targets = []
-
-        def _add(q):
-            q = (q or "").strip()
-            if q and q.lower() not in [t.lower() for t in targets]:
-                targets.append(q)
-
-        # 1. port 服務：只取有真實版本號的，查詢字串用「版本字串」本身（已含產品名，如 dnsmasq 2.41）
-        for proto in ("TCP", "UDP"):
-            for p in self.sm.get("ports", {}).get(proto, []):
-                version = p.get("version", "")
-                if self._is_real_version(version):
-                    _add(self._clean_service_query("", version))
-
-        # 2. Web 分析成果：廠商名 + server 標頭軟體（這些正是本地 RAG 庫有資料的）
-        wf = self.sm.get("web_footprints", {})
-        vendor = (wf.get("iot_vendor", {}) or {}).get("name", "")
-        vendor_short = ""
-        if vendor and vendor.lower() not in ("unknown", "unknown vendor"):
-            # 取廠商名的第一個詞即可（D-LINK SYSTEMS, INC. → D-Link）
-            vendor_short = vendor.split(",")[0].split()[0] if vendor.split() else vendor
-            _add(vendor_short)
-
-        server = wf.get("server", "")
-        if server and server.lower() != "unknown":
-            # lighttpd/1.4.28 → lighttpd 1.4.28
-            _add(server.replace("/", " ").strip())
-
-        # 3. 裝置指紋階段抽出的真實型號 —— 展開多組變體（去硬體版號後綴 / 分隔符 / 加廠商）
-        #    例如 DIR-601B1 → DIR-601B1, DIR-601, DIR601, DIR 601, D-Link DIR-601 …
-        #    家族名 DIR-601 可橋接到以 DIR-601L 收錄的 CVE（子字串命中）。
-        model = wf.get("device_model", "")
-        if model and model.lower() != "unknown":
-            for v in self._model_query_variants(model, vendor_short):
-                _add(v)
-
-        # 4. 使用者手動指定的型號（指紋抓不到的，例如 HNAP 只回 DIR-601B1 但你知道實機是 DIR-601L）。
-        #    在 ai/langchain/.env 設 EXTRA_MODELS=DIR-601L（可逗號/分號分隔多個），
-        #    這些會原樣加入檢索目標 → NVD 會直接用該型號字串查（DIR-601L 不會被當硬體版號砍掉）。
-        extra_models = os.getenv("EXTRA_MODELS", "").strip()
-        if extra_models:
-            for em in re.split(r"[;,]", extra_models):
-                em = em.strip()
-                if em:
-                    _add(em)
-                    for v in self._model_query_variants(em, vendor_short):
-                        _add(v)
-
-        return targets
-
-    def stage2_vuln_search(self):
-        log_info.info("═══ Stage 4：漏洞檢索 (只查真實服務) ═══")
-        self._reload()
-
-        targets = self._build_stage2_targets()
-        if not targets:
-            log_info.warn("⚠️ [漏洞檢索] 沒有任何可查的真實服務（都是 unknown 或純服務類型）。")
-            return
-
-        log_info.info(f"🎯 [漏洞檢索] 本次檢索目標（已過濾髒查詢）: {targets}")
-
-        NVD_CAP_PER_QUERY = int(os.getenv("NVD_CAP_PER_QUERY", "10"))
-        # 🔀 RAG 開關：在 ai/langchain/.env 設 USE_RAG=0（或 false/no/off）即可關閉 RAG，本階段只走 NVD。
-        USE_RAG = os.getenv("USE_RAG", "1").strip().lower() not in ("0", "false", "no", "off")
-        if not USE_RAG:
-            log_info.info("⏸️ [漏洞檢索] RAG 已關閉 (USE_RAG=0)，本階段只使用 NVD 線上檢索。")
-        nvd_done = set()   # 已查過的 NVD 關鍵字 → 去重，避免同一家族查很多次（也減少 NVD 限流）
-
-        for q in targets:
-            self._reload()
-            before = len(self.sm.get("cves", []))   # 先量，RAG+NVD 的新增才算得準
-
-            if USE_RAG:
-                log_info.info(f"🔎 [漏洞檢索] RAG 檢索: {q}")
-                self.net_tools.rag_search_cve(q)
-                self._reload()
-
-            is_model = _looks_like_device_model(q)
-
-            # 【NVD 升為主要來源，不再只是 RAG 的備援】每個目標都查 NVD：
-            #   - 裝置型號 → 正規化成家族名(DIR-601)，用關鍵字查
-            #   - 元件 → 直接用原查詢(含版本，如 dnsmasq 2.41)查
-            #   純廠商詞(如 D-Link，無版本又非型號)會被 nvd_search_cve 內部的版本守衛擋掉，不會灌爆。
-            #   同一關鍵字本階段只查一次(去重)，減少重複與 NVD 限流。
-            nvd_kw = _nvd_family_keyword(q) if is_model else q
-
-            if nvd_kw and nvd_kw.lower() not in nvd_done:
-                nvd_done.add(nvd_kw.lower())
-                reason = "裝置型號→家族名查 NVD" if is_model else "元件→NVD 查詢"
-                log_info.info(f"   ↳ {reason}：`{q}` → NVD 關鍵字 `{nvd_kw}`")
-                nvd_before = len(self.sm.get("cves", []))
-                self.net_tools.nvd_search_cve(nvd_kw)
-                self._reload()
-
-                # ⚠️ NVD 上限：單一關鍵字最多保留 NVD_CAP_PER_QUERY 筆，避免泛詞灌爆
-                cves = self.sm.get("cves", [])
-                added = len(cves) - nvd_before
-                if added > NVD_CAP_PER_QUERY:
-                    self.sm["cves"] = cves[:nvd_before] + cves[nvd_before:nvd_before + NVD_CAP_PER_QUERY]
-                    util.update_share_memory(self.sm)
-                    log_info.warn(
-                        f"   ⚠️ NVD 回傳 {added} 筆過多，已截斷為前 {NVD_CAP_PER_QUERY} 筆"
-                        f"（可用環境變數 NVD_CAP_PER_QUERY 調整）。"
-                    )
-                    self._reload()
-            elif nvd_kw:
-                log_info.info(f"   ↳ NVD 關鍵字 `{nvd_kw}` 本階段已查過，略過重複查詢。")
-
-            after = len(self.sm.get("cves", []))
-            log_info.info(f"   ↳ 累計 CVE: {after} 筆 (本次新增 {after - before})")
-
-        log_info.info(f"✅ [漏洞檢索] 完成：共檢索出 {len(self.sm.get('cves', []))} 筆 CVE")
-
-    # ==================================================================
-    # Stage 2（執行順序）：Web 端點列舉 — 窮舉內部端點，外部自動跳過  [def stage3_web_enum]
-    # ==================================================================
-    def stage3_web_enum(self):
+    def stage2_web_enum(self):
+        """
+        [ State 2 ] 網頁列舉
+        """
         log_info.info("═══ Stage 2：Web 列舉 (窮舉內部端點) ═══")
 
         # 先分析首頁，挖出端點
@@ -434,24 +283,473 @@ class PentestSOP:
 
         log_info.info(f"✅ Stage 2 完成：共分析 {len(processed)} 個 Web 端點")
 
-    # ==================================================================
-    # Stage 5（執行順序）：漏洞驗證 — 每個 CVE 產 N 次 payload 逐一執行  [def stage4_verify]
-    # ==================================================================
-    def _judge_success(self, response: str) -> bool:
+    def _fingerprint_device(self):
+        """
+        [ 裝置指紋蒐集 ] 主動探測標準裝置發現協定 ( HNAP / UPnP / HTTP 標頭 )，
+        並從中抽取出真實的 vendor / model / firmware ( 藉由程式碼進行，而非 LLM )。
+        如果抽取失敗，將資訊標記為 finding。
+        另外併入自製通用辨識器 ( identify_device )，做廣度補強。
+        """
+        log_info.info("═══ 裝置指紋 ( 主動探測標準發現協定 HNAP / UPnP / 標頭 ) ═══")
+        self._reload()
+
+        collected = {}      # 彙整出的真實裝置資訊
+        findings = []
+
+        for pid, desc, path, sensitive in self.STANDARD_DISCOVERY:
+            cmd = f"curl -s -i http://{self.target_ip}{path}"
+            resp = self.net_tools.execute_cli(cmd)
+            if not resp:
+                continue
+            # 404 / 連線失敗就跳過
+            low = resp.lower()
+            if "404 not found" in low or self._judge_fail_only(resp):
+                continue
+
+            info = self._extract_fingerprint(resp)
+            if info:
+                for k, v in info.items():
+                    collected.setdefault(k, v)
+                log_info.info(f"   📡 {pid}: 抽出 {info}")
+
+            # HNAP 回應會列出支援的 SOAP 動作（真實攻擊面）→ 抽出動作名存起來
+            if pid == "hnap":
+                acts = re.findall(r"/HNAP1/([A-Za-z0-9_]+)\s*<", resp)
+                if acts:
+                    collected.setdefault("_hnap_actions", list(dict.fromkeys(acts)))
+
+            # 敏感端點在未授權下回了裝置資訊（vendor/model/firmware）→ 資訊洩漏
+            leaked = sensitive and any(k in info for k in ("vendor", "model", "firmware"))
+            if leaked:
+                # ℹ️ HNAP 本就是「裝置管理/發現」協定，回傳 vendor/model/firmware 屬其設計用途，
+                #    不應算成一筆「成功的漏洞」。故 HNAP 只保留為『資訊性紀錄』(info_only)，
+                #    success=False → 不計入 Stage 5 成功數；其餘敏感端點(如 UPnP)維持原樣算洩漏。
+                is_info_only = (pid == "hnap")
+                if is_info_only:
+                    log_info.info(f"   ℹ️ [資訊性] {path} 回傳裝置資訊（HNAP 協定設計行為，不計入成功）")
+                else:
+                    log_info.info(f"   ✅ [資訊洩漏] {path} 未授權即回傳裝置資訊")
+                findings.append({
+                    "cve_id": f"INFO-DISCLOSURE {path}",
+                    "cvss": "N/A",
+                    "description": f"{desc}：未授權即可取得裝置資訊 "
+                                   f"(vendor={info.get('vendor','')}, model={info.get('model','')}, "
+                                   f"firmware={info.get('firmware','')})。"
+                                   + ("（HNAP 為裝置發現協定之設計行為，列為資訊性、不計入成功。）"
+                                      if is_info_only else ""),
+                    "method": "standard-protocol-probe",
+                    "attempts": [{
+                        "n": 1, "cmd": cmd,
+                        "response_excerpt": (resp or "")[:RESP_EXCERPT_LEN],
+                        "judged_success": not is_info_only, "is_poc": False,
+                    }],
+                    "success": not is_info_only,
+                    "success_cmd": None if is_info_only else cmd,
+                    "info_only": is_info_only,
+                })
+
+        # =============================================================
+        # 📡【廣度指紋補強】標準協定探測（深度）跑完後，再跑自製通用辨識器
+        #    （HTTP 爬首頁跳轉/子框架/.php 設定腳本 + CSS logo OCR + UPnP/SSDP）。
+        #    用 setdefault 只補 standard-probe「沒抽到」的欄位——HNAP/UPnP XML 的
+        #    高可信結果優先，不會被覆蓋。identify_device 內部也會把結果 setdefault
+        #    進 web_footprints，standalone 呼叫同樣有效。
+        # =============================================================
+        try:
+            dev = self.net_tools.identify_device()
+        except Exception as e:
+            dev = {}
+            log_info.warn(f"⚠️ [裝置指紋] identify_device 例外：{e}")
+        if dev:
+            for k in ("vendor", "model", "firmware", "server"):
+                if dev.get(k):
+                    collected.setdefault(k, dev[k])     # 只補 standard-probe 沒有的
+            if dev.get("hw_version"):
+                collected.setdefault("hw_version", dev["hw_version"])
+            if dev.get("clues"):
+                collected.setdefault("clues", dev["clues"])
+            log_info.info(
+                f"   📡 [廣度指紋補強] identify_device 貢獻："
+                f"vendor={dev.get('vendor') or '—'}, model={dev.get('model') or '—'}, "
+                f"firmware={dev.get('firmware') or '—'}, hw={dev.get('hw_version') or '—'}"
+            )
+
+        # 把程式實際抽出的真實裝置資訊寫回 web_footprints（覆蓋 Stage 2 Web 列舉的 LLM 猜測）
+        if collected:
+            self._reload()
+            wf = self.sm.setdefault("web_footprints", {})
+            if collected.get("vendor"):
+                wf.setdefault("iot_vendor", {})["name"] = collected["vendor"]
+            if collected.get("model"):
+                wf["device_model"] = collected["model"]
+            if collected.get("firmware"):
+                wf["firmware_version"] = collected["firmware"]
+            if collected.get("hw_version"):
+                wf["hardware_version"] = collected["hw_version"]
+            if collected.get("server"):
+                wf["server"] = collected["server"]
+            if collected.get("_hnap_actions"):
+                wf["hnap_actions"] = collected["_hnap_actions"]
+            wf["fingerprint_source"] = "standard-protocol-probe + identify_device"
+            self.sm["device_fingerprint"] = collected
+            self.sm["disclosure_findings"] = findings
+            self._save()
+            log_info.info(f"🧾 [裝置指紋] 程式抽出真實裝置資訊: {collected}")
+        else:
+            self._reload()
+            self.sm["disclosure_findings"] = findings
+            self._save()
+            log_info.info("   ↳ 標準協定未回傳可用裝置資訊（可能為未知/未支援的設備）。")
+
+        # 🎯【已知 IoT 攻擊面主動探測】把 boardData*.php / recreate.php 這類沒連結、Stage 2
+        #    爬不到、但正是 CVE sink 的端點主動探一輪，存在的記進 live_endpoints 當攻擊面情報。
+        self._probe_known_attack_endpoints()
+
+        return findings
+
+    def _probe_known_attack_endpoints(self):
+        """主動探測已知 IoT 攻擊面端點（boardData*.php / recreate.php 等）。
+        這些真實 sink 多半沒有連結、Stage 2 爬不到，但正是 CVE 的注入/存取點。
+        逐一 curl，存在（非 404、非連線失敗、非逾時）就記進 share_memory['live_endpoints']，
+        讓 Stage 4 的 _build_target_context 把它們當攻擊面情報餵給 LLM。"""
+        self._reload()
+        existing = {x.get("url") for x in self.sm.get("live_endpoints", [])
+                    if isinstance(x, dict)}
+
+        new_recs = []
+        found = []
+        for path in self.KNOWN_ATTACK_ENDPOINTS:
+            url = f"http://{self.target_ip}{path}"
+            if url in existing:
+                continue
+            resp = self.net_tools.execute_cli(f"curl -s -i -m 10 http://{self.target_ip}{path}")
+            low = (resp or "").lower()
+            # 連線失敗 / 404 / 逾時 → 視為不存在，跳過
+            if not resp or "404 not found" in low or self._judge_fail_only(resp):
+                continue
+            m = re.search(r"http/\d\.\d\s+(\d+)", low)
+            status = m.group(1) if m else "200"
+            new_recs.append({
+                "url": url, "status": status, "title": "",
+                "note": "known-attack-surface probe（主動探測命中的 CVE sink）",
+            })
+            found.append(f"{path}({status})")
+
+        if new_recs:
+            # execute_cli 期間 share_memory 可能被改，收尾前重讀再合併，避免覆蓋
+            self._reload()
+            live = self.sm.get("live_endpoints", [])
+            if not isinstance(live, list):
+                live = []
+            have = {x.get("url") for x in live if isinstance(x, dict)}
+            for rec in new_recs:
+                if rec["url"] not in have:
+                    live.append(rec)
+            self.sm["live_endpoints"] = live
+            self._save()
+            log_info.info(f"🎯 [已知攻擊面] 主動探測命中: {', '.join(found)}（已記入攻擊面情報）")
+        else:
+            log_info.info("   ↳ 已知攻擊面端點主動探測：無額外命中。")
+
+    @staticmethod
+    def _is_real_version(version: str) -> bool:
+        """
+        判斷版本欄位是不是『真的有版本資訊』。
+        排除 unknown、空值、nmap 的雜訊字串（Service detection performed...）。
+        """
+        v = (version or "").strip().lower()
+        if not v or v == "unknown":
+            return False
+        if "service detection performed" in v or "please report" in v:
+            return False
+        return True
+
+    @staticmethod
+    def _model_query_variants(model: str, vendor_short: str = "") -> list:
+        """
+        從指紋型號展開多組查詢變體，提高 CVE 檢索命中率。
+        重點場景：HNAP 回報硬體版號（如 DIR-601B1），但 CVE 以市場型號收錄（DIR-601L / DIR-601）。
+        作法：
+          1. 原字串（DIR-601B1）
+          2. 去掉『硬體版號後綴』(結尾的 字母+數字，如 B1/A1/C1；L/K 這種市場字尾不動) → 家族名 DIR-601
+             —— DIR-601 是 DIR-601L 的子字串，NVD/RAG 查 DIR-601 就能撈到 DIR-601L 的 CVE。
+          3. 分隔符變體（DIR601 / DIR 601）
+          4. 加廠商前綴（D-Link DIR-601 / D-Link DIR-601B1）
+        回傳保序去重後的變體清單。
+        """
+        m = (model or "").strip()
+        if not m:
+            return []
+        variants = [m]
+        # 去硬體版號後綴：結尾的「(rev) 字母+1~2位數字」，如 B1/A1/C1/ rev B1。
+        # 只動『字母緊接數字』的尾巴；DIR-868L 這種單一字母市場字尾（後面沒數字）不會被誤砍。
+        base = re.sub(r"(?i)[\s_-]*(rev\.?\s*)?[A-Z]\d{1,2}$", "", m).strip()
+        if base and base.lower() != m.lower():
+            variants.append(base)
+
+        # 對 原字串 與 家族名 都做分隔符變體
+        expanded = []
+        for v in variants:
+            expanded.append(v)
+            if "-" in v:
+                expanded.append(v.replace("-", ""))    # DIR601
+                expanded.append(v.replace("-", " "))    # DIR 601
+
+        # 加廠商前綴（放最後，當補充）
+        vs = (vendor_short or "").strip()
+        if vs:
+            for v in list(dict.fromkeys([m, base])):
+                if v and vs.lower() not in v.lower():
+                    expanded.append(f"{vs} {v}")
+
+        # 保序去重，濾掉太短的
+        out = []
+        for v in expanded:
+            v = (v or "").strip()
+            if len(v) >= 4 and v.lower() not in [x.lower() for x in out]:
+                out.append(v)
+        return out
+
+    def _build_stage4_targets(self) -> list:
+        """
+        只挑『真實服務』當檢索目標：
+          1. 有明確版本號的 port 服務（例如 dnsmasq 2.41、MiniUPnP 1.4）
+          2. Web 分析挖到的廠商與 server 軟體（例如 D-Link、lighttpd 1.4.28）
+        跳過 http unknown / dhcps / netbios-ns 這種只有服務類型、沒有產品的髒查詢。
+        """
+        targets = []
+
+        def _add(q):
+            """把查詢字串去空白後加進 targets；空字串或已存在的（大小寫不分）直接跳過。"""
+            q = (q or "").strip()
+            if q and q.lower() not in [t.lower() for t in targets]:
+                targets.append(q)
+
+        # 1. port 服務：只取有真實版本號的，查詢字串用「版本字串」本身（已含產品名，如 dnsmasq 2.41）
+        for proto in ("TCP", "UDP"):
+            for p in self.sm.get("ports", {}).get(proto, []):
+                version = p.get("version", "")
+                if self._is_real_version(version):
+                    _add(self._clean_service_query("", version))
+
+        # 2. Web 分析成果：廠商名 + server 標頭軟體（這些正是本地 RAG 庫有資料的）
+        wf = self.sm.get("web_footprints", {})
+        vendor = (wf.get("iot_vendor", {}) or {}).get("name", "")
+        vendor_short = ""
+        if vendor and vendor.lower() not in ("unknown", "unknown vendor"):
+            # 取廠商名的第一個詞即可（D-LINK SYSTEMS, INC. → D-Link）
+            vendor_short = vendor.split(",")[0].split()[0] if vendor.split() else vendor
+            _add(vendor_short)
+
+        server = wf.get("server", "")
+        if server and server.lower() != "unknown":
+            # lighttpd/1.4.28 → lighttpd 1.4.28
+            _add(server.replace("/", " ").strip())
+
+        # 3. 裝置指紋階段抽出的真實型號 —— 展開多組變體（去硬體版號後綴 / 分隔符 / 加廠商）
+        #    例如 DIR-601B1 → DIR-601B1, DIR-601, DIR601, DIR 601, D-Link DIR-601 …
+        #    家族名 DIR-601 可橋接到以 DIR-601L 收錄的 CVE（子字串命中）。
+        model = wf.get("device_model", "")
+        if model and model.lower() != "unknown":
+            for v in self._model_query_variants(model, vendor_short):
+                _add(v)
+
+        # 3b. identify_device 抓到的多候選型號（例如 WNAP210 / WNAP320）也一起展開檢索
+        for m in (self.sm.get("device_identify", {}) or {}).get("models_all", []):
+            if m and m.lower() != "unknown":
+                for v in self._model_query_variants(m, vendor_short):
+                    _add(v)
+
+        # 4. 使用者手動指定的型號（指紋抓不到的，例如 HNAP 只回 DIR-601B1 但你知道實機是 DIR-601L）。
+        #    在 ai/langchain/.env 設 EXTRA_MODELS=DIR-601L（可逗號/分號分隔多個），
+        #    這些會原樣加入檢索目標 → NVD 會直接用該型號字串查（DIR-601L 不會被當硬體版號砍掉）。
+        extra_models = os.getenv("EXTRA_MODELS", "").strip()
+        if extra_models:
+            for em in re.split(r"[;,]", extra_models):
+                em = em.strip()
+                if em:
+                    _add(em)
+                    for v in self._model_query_variants(em, vendor_short):
+                        _add(v)
+
+        return targets
+
+    def stage3_vuln_search(self):
+        """[ Stage 4 執行順序 ] 漏洞檢索：對每個真實服務 / 廠商 / 型號查 NVD 線上 API。
+        （RAG 目前停用，只用 NVD；要恢復「RAG 優先、查無則 NVD 備援」見下方註解。）
+        NVD 工具本身會把命中的 CVE 寫進 share_memory['cves']，這裡只負責決定『查哪些目標』，
+        並以 share_memory['cves'] 筆數的增量判斷某個目標有沒有新命中。"""
+        log_info.info("═══ Stage 4：漏洞檢索 (目前僅用 NVD) ═══")
+        self._reload()
+
+        targets = self._build_stage4_targets()
+        if not targets:
+            log_info.warn("⚠️ Stage 4：沒有可檢索的目標（無真實版本號服務 / 廠商 / 型號），略過。")
+            return
+
+        log_info.info(f"🔍 [Stage 4] 檢索目標共 {len(targets)} 個：{targets}")
+
+        for i, q in enumerate(targets, 1):
+            log_info.info(f"🔎 [Stage 4] ({i}/{len(targets)}) 檢索：{q}")
+
+            # 查詢前的 CVE 數 → 用增量判斷這個目標有沒有新命中
+            self._reload()
+            before = len(self.sm.get("cves", []))
+
+            # 🔕【RAG 目前停用】只用 NVD。要恢復「RAG 優先、查無則 NVD 備援」，
+            #    取消下面這段註解即可（rag_search_cve 會把命中的 CVE 寫進 share_memory['cves']）：
+            # self.net_tools.rag_search_cve(q)
+            # self._reload()
+            # if len(self.sm.get("cves", [])) > before:
+            #     log_info.info(f"   ✅ RAG 命中：{q}。")
+            #     continue
+
+            # NVD 線上查詢（無版本號的泛詞會在 nvd_search_cve 內自動跳過）
+            self.net_tools.nvd_search_cve(q)
+
+            self._reload()
+            after = len(self.sm.get("cves", []))
+            if after > before:
+                log_info.info(f"   ✅ NVD 命中：{q} 新增 {after - before} 筆 CVE。")
+            else:
+                log_info.info(f"   ❌ {q} NVD 無結果。")
+
+        # 🧹 相關性過濾：剔除與本機軟體棧無關的 CVE（NVD 關鍵字搜尋常撈到 Windows/HP/SunOS/
+        #    印表機等完全不相干的歷史 CVE，會把報告風險分佈灌爆、嚴重影響可信度）。
+        self._filter_irrelevant_cves()
+
+        self._reload()
+        total = len(self.sm.get("cves", []))
+        log_info.info(f"✅ Stage 4 完成：share_memory 累積 {total} 筆 CVE（已過濾不相關）。")
+
+    # 服務/協定泛詞：太常見，當關鍵詞會把一堆不相干 CVE 也留下，故排除。
+    _GENERIC_SVC_TERMS = {
+        "http", "https", "www", "domain", "dns", "upnp", "ssdp", "ssl", "tls",
+        "tcp", "udp", "unknown", "service",
+    }
+
+    def _build_relevance_terms(self) -> set:
+        """從裝置指紋 + 開放埠組出『相關產品/服務關鍵詞』集合，用來判斷一筆 CVE 是否真的
+        跟本機軟體棧有關。包含：
+          - 產品名（lighttpd / dnsmasq / miniupnp / d-link / dir-601 變體…）
+          - 實際開放的服務/協定名（tftp / snmp / netbios / dhcp…；排除 http 等過泛詞）
+        全部小寫；純數字（版本號）與長度 < 3 的字串捨棄，避免誤命中。"""
+        terms = set()
+
+        def _add_words(s):
+            for tok in re.split(r"[\s/(),_]+", (s or "").lower()):
+                tok = tok.strip(" .-?")
+                if len(tok) >= 3 and not re.fullmatch(r"[\d.]+", tok):
+                    terms.add(tok)
+
+        wf = self.sm.get("web_footprints", {})
+        fp = self.sm.get("device_fingerprint", {})
+
+        # server 標頭（lighttpd/1.4.28 → lighttpd）、廠商（D-Link）
+        _add_words(wf.get("server", "")); _add_words(fp.get("server", ""))
+        _add_words((wf.get("iot_vendor", {}) or {}).get("name", "")); _add_words(fp.get("vendor", ""))
+
+        # 型號（DIR-601B1 → 展開家族/分隔符變體，橋接 DIR-601 / DIR601 等寫法）
+        def _add_model(s):
+            # 型號詞必須『含數字或長度 >= 5』，否則像 'dir' 會誤命中 directory/jetDirect/direct…
+            for tok in re.split(r"[\s/(),_]+", (s or "").lower()):
+                tok = tok.strip(" .-?")
+                if not tok or re.fullmatch(r"[\d.]+", tok):
+                    continue
+                if re.search(r"\d", tok) or len(tok) >= 5:
+                    terms.add(tok)
+
+        model_sources = [wf.get("device_model", ""), fp.get("model", "")]
+        model_sources += (self.sm.get("device_identify", {}) or {}).get("models_all", [])
+        for m in model_sources:
+            if m and m.lower() != "unknown":
+                for v in self._model_query_variants(m):
+                    _add_model(v)
+
+        # 開放埠：真實版本字串（常含產品名 dnsmasq/MiniUPnP）+ 夠特定的服務名（排除 http 等泛詞）
+        for proto in ("TCP", "UDP"):
+            for p in self.sm.get("ports", {}).get(proto, []):
+                ver = p.get("version", "")
+                if self._is_real_version(ver):          # 跳過 nmap 的雜訊版本字串
+                    _add_words(ver)
+                svc = (p.get("service", "") or "").lower().strip(" ?").split("-")[0]
+                if len(svc) >= 3 and svc not in self._GENERIC_SVC_TERMS:
+                    terms.add(svc)                      # tftp / snmp / netbios / dhcps…
+
+        if "d-link" in terms:
+            terms.add("dlink")
+        if "dlink" in terms:
+            terms.add("d-link")
+
+        noise = {"unknown", "service", "detection", "performed", "please", "report",
+                 "incorrect", "results", "wireless", "router", "home", "inc", "systems",
+                 "nmap", "submit", "org", "the", "and", "for", "version"} | self._GENERIC_SVC_TERMS
+        return {t for t in terms if t not in noise}
+
+    def _filter_irrelevant_cves(self):
+        """把與本機軟體棧無關的 CVE 從待驗證清單移到 excluded_cves（不刪除、保留可稽核）。
+        判準：CVE 的（描述 + 產品 + 編號 + CPE）需命中至少一個相關關鍵詞；全都沒命中＝視為
+        NVD 關鍵字誤撈（Windows/HP/SunOS/印表機/其他裝置…），排除、不列入驗證與報告。
+        若指紋沒抽到任何可用關鍵詞則略過過濾（全數保留），以免把全部誤殺。"""
+        self._reload()
+        terms = self._build_relevance_terms()
+        if not terms:
+            log_info.warn("⚠️ [相關性過濾] 指紋未提供可用關鍵詞，略過過濾（全數保留）。")
+            return
+
+        cves = [c for c in self.sm.get("cves", []) if isinstance(c, dict)]
+        kept, dropped = [], []
+        for c in cves:
+            cpe = c.get("cpe", "")
+            cpe_s = " ".join(cpe) if isinstance(cpe, list) else str(cpe)
+            blob = " ".join([
+                str(c.get("description", "")),
+                str(c.get("product", "")),
+                str(c.get("cve_id") or c.get("cveID") or ""),
+                cpe_s,
+            ]).lower()
+            if any(t in blob for t in terms):
+                kept.append(c)
+            else:
+                dropped.append(c)
+
+        if dropped:
+            self.sm["cves"] = kept
+            self.sm["excluded_cves"] = (self.sm.get("excluded_cves", []) or []) + [
+                {"cve_id": d.get("cve_id") or d.get("cveID"),
+                 "reason": "irrelevant-product",
+                 "description": (d.get("description", "") or "")[:200]}
+                for d in dropped
+            ]
+            self._save()
+            log_info.info(
+                f"🧹 [相關性過濾] 保留 {len(kept)} 筆、排除 {len(dropped)} 筆與軟體棧無關的 CVE。"
+            )
+            log_info.info(f"   ↳ 相關關鍵詞：{', '.join(sorted(terms))}")
+        else:
+            log_info.info(f"🧹 [相關性過濾] {len(kept)} 筆全部相關，無排除。")
+
+    def _judge_success(self, response: str, command: str = None, elapsed: float = None) -> bool:
         """程式硬條件判定。
         ①最強：執行回顯 nonce 出現＝指令真的在靶機執行（勝過一切，連失敗字串也不翻盤，
           因為我們注入的隨機碼被回顯，本身就是鐵證）。
+        ①'盲注時間差：注入 sleep N 且實際耗時達標＝指令真的執行（輸出不回顯的盲注也抓得到）。
+          與 nonce 同屬「鐵證」，優先於失敗字串——因為延遲本身就是執行的證明。
         ②其次：失敗特徵命中 → 判失敗。
-        ③最後：成功關鍵字命中 → 判成功。"""
+        ③最後：成功關鍵字命中 → 判成功。
+        command / elapsed：呼叫端把「這條指令」與「實測耗時」傳進來，供盲注時間差判定用；
+        不傳（如舊呼叫）則時間差規則自動略過，行為與原本相同（向下相容）。"""
         text = response or ""
         if self._active_nonce and self._active_nonce in text:
+            return True
+        if _judge_blind_timing(command, elapsed, text):
             return True
         low = text.lower()
         if any(m.lower() in low for m in FAILURE_MARKERS):
             return False
         return any(k.lower() in low for k in SUCCESS_KEYWORDS)
 
-    def _success_evidence(self, response: str) -> dict:
+    def _success_evidence(self, response: str, command: str = None, elapsed: float = None) -> dict:
         """命中後抽出「為什麼算成功」的客觀證據，供報告說明用。
         回傳 {"keywords": [實際命中的成功特徵...], "snippet": 該特徵在回應中前後的原文片段}。
         注意：這裡回報的是「程式硬條件」實際比對到的字串，屬可稽核的鐵證，
@@ -469,6 +767,20 @@ class PentestSOP:
             if end < len(text):
                 snippet = snippet + "…"
             return {"keywords": ["<exec-nonce>"], "snippet": snippet}
+        # ①' 盲注時間差證據：注入 sleep N 且耗時達標＝指令確實執行（盲注 RCE）
+        if _judge_blind_timing(command, elapsed, text):
+            m = _SLEEP_PROBE_RE.search(command or "")
+            want = m.group(1) if m else "?"
+            if elapsed is not None:
+                got = f"{elapsed:.1f} 秒（執行端實測）"
+            else:
+                mo = _OOB_SECONDS_RE.search(text)
+                got = f"{mo.group(1)} 秒（curl -w 回報）" if mo else "≥ 門檻"
+            return {
+                "keywords": ["<blind-timing>"],
+                "snippet": f"注入 sleep {want} 秒後，回應耗時 {got} → 指令確實在靶機執行"
+                           f"（盲注 RCE，時間差證明；輸出不回顯故無法用關鍵字判定）。",
+            }
         # ② 失敗特徵優先（與 _judge_success 一致）→ 不算命中，無證據
         if any(m.lower() in low for m in FAILURE_MARKERS):
             return {}
@@ -509,9 +821,11 @@ class PentestSOP:
         # run_cmd 裡的檔名換成完整路徑
         full_cmd = run_cmd.replace(filename, filepath)
         log_info.info(f"   🧬 [PoC 執行] {cve_id} → {run_cmd}")
+        _t0 = time.perf_counter()
         resp = self.net_tools.execute_cli(full_cmd)
-        ok = self._judge_success(resp)
-        evidence = self._success_evidence(resp) if ok else {}
+        elapsed = time.perf_counter() - _t0
+        ok = self._judge_success(resp, command=full_cmd, elapsed=elapsed)
+        evidence = self._success_evidence(resp, command=full_cmd, elapsed=elapsed) if ok else {}
 
         return {
             "cmd": run_cmd,
@@ -535,6 +849,16 @@ class PentestSOP:
         ("upnp-devdesc",   "UPnP 裝置描述 (DeviceDescription.xml)",   "/DeviceDescription.xml",  True),
     ]
 
+    # 已知 IoT 攻擊面端點：這些真實 sink 多半沒有連結、Stage 2 web 列舉爬不到，但正是
+    # CVE 的注入/存取點。裝置指紋階段會主動 curl 一輪，存在的記進 live_endpoints，讓
+    # Stage 4 的 _build_target_context 餵給 LLM——命令注入才打得到真 sink 而非亂猜 config.php。
+    KNOWN_ATTACK_ENDPOINTS = [
+        "/boardDataWW.php", "/boardData102.php", "/boardData103.php",
+        "/boardDataJP.php", "/boardDataNA.php",   # Netgear ProSAFE 命令注入 sink
+        "/recreate.php",                          # Netgear 存取控制 / 認證繞過
+        "/BackupConfig.php",                      # 設定備份洩漏
+    ]
+
     @staticmethod
     def _extract_fingerprint(text: str) -> dict:
         """從回應抽出真實的 vendor / model / firmware / server / title。
@@ -555,86 +879,6 @@ class PentestSOP:
                     out[key] = m.group(1).strip()
                     break
         return out
-
-    def _fingerprint_device(self):
-        """主動探測標準裝置發現協定（HNAP / UPnP / HTTP 標頭），
-        從回應抽出真實的 vendor/model/firmware（程式在執行過程中獲取，非寫死、非 LLM 猜測）。
-        這些是跨廠牌標準協定，對任何 IoT 設備一體適用，不假設廠商。
-        若標準協定在『未授權』狀態回傳裝置資訊，一併記為資訊洩漏 finding。"""
-        log_info.info("═══ Stage 3：裝置指紋 (主動探測標準發現協定 HNAP/UPnP/標頭) ═══")
-        self._reload()
-
-        collected = {}      # 彙整出的真實裝置資訊
-        findings = []
-
-        for pid, desc, path, sensitive in self.STANDARD_DISCOVERY:
-            cmd = f"curl -s -i http://{self.target_ip}{path}"
-            resp = self.net_tools.execute_cli(cmd)
-            if not resp:
-                continue
-            # 404 / 連線失敗就跳過
-            low = resp.lower()
-            if "404 not found" in low or self._judge_fail_only(resp):
-                continue
-
-            info = self._extract_fingerprint(resp)
-            if info:
-                for k, v in info.items():
-                    collected.setdefault(k, v)
-                log_info.info(f"   📡 {pid}: 抽出 {info}")
-
-            # HNAP 回應會列出支援的 SOAP 動作（真實攻擊面）→ 抽出動作名存起來
-            if pid == "hnap":
-                acts = re.findall(r"/HNAP1/([A-Za-z0-9_]+)\s*<", resp)
-                if acts:
-                    collected.setdefault("_hnap_actions", list(dict.fromkeys(acts)))
-
-            # 敏感端點在未授權下回了裝置資訊（vendor/model/firmware）→ 資訊洩漏
-            leaked = sensitive and any(k in info for k in ("vendor", "model", "firmware"))
-            if leaked:
-                log_info.info(f"   ✅ [資訊洩漏] {path} 未授權即回傳裝置資訊")
-                findings.append({
-                    "cve_id": f"INFO-DISCLOSURE {path}",
-                    "cvss": "N/A",
-                    "description": f"{desc}：未授權即可取得裝置資訊 "
-                                   f"(vendor={info.get('vendor','')}, model={info.get('model','')}, "
-                                   f"firmware={info.get('firmware','')})。",
-                    "method": "standard-protocol-probe",
-                    "attempts": [{
-                        "n": 1, "cmd": cmd,
-                        "response_excerpt": (resp or "")[:RESP_EXCERPT_LEN],
-                        "judged_success": True, "is_poc": False,
-                    }],
-                    "success": True,
-                    "success_cmd": cmd,
-                })
-
-        # 把程式實際抽出的真實裝置資訊寫回 web_footprints（覆蓋 Stage 2 Web 列舉的 LLM 猜測）
-        if collected:
-            self._reload()
-            wf = self.sm.setdefault("web_footprints", {})
-            if collected.get("vendor"):
-                wf.setdefault("iot_vendor", {})["name"] = collected["vendor"]
-            if collected.get("model"):
-                wf["device_model"] = collected["model"]
-            if collected.get("firmware"):
-                wf["firmware_version"] = collected["firmware"]
-            if collected.get("server"):
-                wf["server"] = collected["server"]
-            if collected.get("_hnap_actions"):
-                wf["hnap_actions"] = collected["_hnap_actions"]
-            wf["fingerprint_source"] = "standard-protocol-probe"
-            self.sm["device_fingerprint"] = collected
-            self.sm["disclosure_findings"] = findings
-            self._save()
-            log_info.info(f"🧾 [裝置指紋] 程式抽出真實裝置資訊: {collected}")
-        else:
-            self._reload()
-            self.sm["disclosure_findings"] = findings
-            self._save()
-            log_info.info("   ↳ 標準協定未回傳可用裝置資訊（可能為未知/未支援的設備）。")
-
-        return findings
 
     def _judge_fail_only(self, response: str) -> bool:
         """只判斷是否命中『失敗特徵』（連線失敗、404 等），用於指紋探測略過無效回應。"""
@@ -711,8 +955,10 @@ class PentestSOP:
     #    session 狀態與流程都由程式管；7B 只在「程式抽不出登入表單」時被叫去看 HTML。
     # ------------------------------------------------------------------
     def _llm_login_form(self, html: str) -> dict:
-        """7B 後備：程式抽不出登入表單時，請 7B 從 HTML 找出表單欄位。
-        回傳 {action_url, method, user_field, pass_field}。失敗回 {}。"""
+        """
+        7B 後備：程式抽不出登入表單時，請 7B 從 HTML 找出表單欄位。
+        回傳 {action_url, method, user_field, pass_field}。失敗回 {}。
+        """
         try:
             from ai.ollama import call_ollama_json
         except Exception:
@@ -778,6 +1024,10 @@ class PentestSOP:
                           f"需認證的 CVE 可能因此無法驗證，將以未登入方式繼續。")
 
     def stage4_verify(self):
+        """[ Stage 5 執行順序 ] 漏洞驗證：逐一拿 share_memory['cves'] 的 CVE 做實測。
+        有自帶 PoC → 交 coder 改寫成可執行檔跑；沒 PoC → 回饋迴圈由 LLM 逐步產指令
+        （看得到上一步真實回應再修正下一步）。以『執行回顯 nonce / 成功關鍵字』做程式硬條件判定，
+        DoS 類只列報告不實跑。結果寫進 share_memory['exploit_attempts']。"""
         log_info.info("═══ Stage 5：漏洞驗證 (每個 CVE 試 {} 次) ═══".format(POC_ATTEMPTS_PER_CVE))
         self._reload()
 
@@ -804,12 +1054,23 @@ class PentestSOP:
 
         all_cves = [c for c in self.sm.get("cves", []) if isinstance(c, dict)]
 
-        # 🚫【DoS 不進驗證清單】DoS 類會打崩靶機、本來就不實際驗證，
-        #    直接從「要用的 CVE 清單」切掉，只留在報告當「已識別、未驗證」。
+        # 🚫【DoS 不進驗證清單】DoS 類會打崩靶機、本來就不實際驗證，只留在報告當「已識別、未驗證」。
+        # 📋【report-only 不進驗證清單】csrf / buffer_overflow / misconfiguration 用現有判定條件
+        #    (nonce / root:x:0:0 / uid=0…) 本來就驗不出來，比照 DoS 只列報告、不進迴圈，
+        #    避免 Stage 5 成功率被必然未果的類別拉低。
         dos_cves = [c for c in all_cves if _is_dos_cve(c)]
-        cves = [c for c in all_cves if not _is_dos_cve(c)]
+        rest = [c for c in all_cves if not _is_dos_cve(c)]
 
-        # 把 DoS 從 share_memory 的「要用的 CVE 清單」移除 → 網頁/計數看到的就是乾淨的待驗證清單
+        report_only_cves = []
+        cves = []
+        for c in rest:
+            if classify_cve(c) in REPORT_ONLY_CLASSES:
+                report_only_cves.append(c)
+            else:
+                cves.append(c)
+
+        # 把 DoS / report-only 從 share_memory 的「要用的 CVE 清單」移除
+        # → 網頁/計數看到的就是乾淨的待驗證清單
         self.sm["cves"] = cves
         self._save()
 
@@ -828,9 +1089,33 @@ class PentestSOP:
         if dos_cves:
             log_info.info(f"🚫 已排除 {len(dos_cves)} 筆 DoS 類 CVE，不納入驗證清單（仍列入報告）。")
 
+        # report-only 類別寫進報告（已識別、不自動驗證），同樣不佔驗證進度、不進迴圈
+        for c in report_only_cves:
+            cid = c.get("cve_id") or c.get("cveID") or "UNKNOWN"
+            try:
+                sc = float(c.get("score") or c.get("cvss") or 0)
+            except (ValueError, TypeError):
+                sc = 0.0
+            attempts_log.append({
+                "cve_id": cid, "cvss": sc, "description": c.get("description", ""),
+                "vuln_class": classify_cve(c),
+                "attempts": [], "success": False, "success_cmd": None,
+                "report_only": True,   # 報告端據此寫「已識別、不自動驗證(csrf/溢位/設定不當)」
+            })
+        if report_only_cves:
+            log_info.info(
+                f"📋 已將 {len(report_only_cves)} 筆 report-only 類 CVE"
+                f"(csrf/buffer_overflow/misconfiguration)列報告、不自動驗證。"
+            )
+
         total_cves = len(cves)
         if not cves:
-            log_info.warn("⚠️ Stage 5：扣除 DoS 後沒有可驗證的 CVE，但已併入裝置指紋階段的洩漏發現。")
+            log_info.warn("⚠️ Stage 5：扣除 DoS / report-only 後沒有可驗證的 CVE，但已併入裝置指紋階段的洩漏發現。")
+
+        # ♻️【去重狀態】confirmed_signatures: 注入點簽章 → 第一個獨立命中的 CVE。
+        #    cve_ids_in_scope: 這輪實際會驗證的 CVE 集合（標準歸屬 CVE 不在其中時退回「第一個命中」當歸屬）。
+        confirmed_signatures = {}
+        cve_ids_in_scope = {(c.get("cve_id") or c.get("cveID")) for c in cves}
 
         for idx, cve in enumerate(cves, 1):
             cve_id = cve.get("cve_id") or cve.get("cveID") or "UNKNOWN"
@@ -918,14 +1203,17 @@ class PentestSOP:
                         f"   ↳ 第 {attempt_n} 步 (回饋迴圈): {cmd[:80]}"
                         + (f"  〔理由: {reason[:40]}〕" if reason else "")
                     )
+                    _t0 = time.perf_counter()
                     resp = self.net_tools.execute_cli(cmd)
-                    ok = self._judge_success(resp)
-                    evidence = self._success_evidence(resp) if ok else {}
+                    elapsed = time.perf_counter() - _t0
+                    ok = self._judge_success(resp, command=cmd, elapsed=elapsed)
+                    evidence = self._success_evidence(resp, command=cmd, elapsed=elapsed) if ok else {}
                     cve_record["attempts"].append({
                         "n": attempt_n, "cmd": cmd,
                         "response_excerpt": (resp or "")[:RESP_EXCERPT_LEN],
                         "judged_success": ok, "is_poc": False,
                         "reason": reason,
+                        "elapsed_sec": round(elapsed, 2),
                         "evidence_keywords": evidence.get("keywords", []),
                         "evidence_snippet": evidence.get("snippet", ""),
                     })
@@ -948,7 +1236,35 @@ class PentestSOP:
                         )
                         break
 
-            if not cve_record["success"]:
+            # ============================================================
+            # ♻️ 同注入點去重：命中後算注入點簽章，若該 sink 已有歸屬（標準歸屬 CVE，
+            #    或這輪第一個命中它的 CVE）且不是自己 → 標成 affected-by-version，
+            #    不計為獨立利用，避免同族 CVE 借同一 sink 灌水。
+            # ============================================================
+            if cve_record["success"]:
+                sig = _injection_signature(cve_record.get("success_cmd", ""), vuln_class)
+                canonical = _CANONICAL_CVE_FOR_SIG.get(sig)
+                if canonical and canonical not in cve_ids_in_scope:
+                    canonical = None   # 標準歸屬 CVE 這輪沒驗到 → 退回「第一個命中」當歸屬
+                owner = canonical or confirmed_signatures.get(sig)
+                if sig and owner and owner != cve_id:
+                    # 這條命中其實是別人(owner)的 sink → 去重
+                    cve_record["success"] = False
+                    cve_record["affected_by_version"] = True
+                    cve_record["duplicate_of"] = owner
+                    cve_record["dedup_note"] = (
+                        f"與 {owner} 為同一注入點（{sig}）。本次時間差命中的實為該 sink，"
+                        f"非本 CVE 獨立驗證；列為『受影響(版本範圍內)、未獨立驗證』。"
+                    )
+                    log_info.info(
+                        f"   ♻️ {cve_id} 與 {owner} 同注入點（{sig}）→ 去重，標為 affected-by-version（不計獨立命中）。"
+                    )
+                elif sig:
+                    # 該 sink 的獨立命中（標準歸屬本尊，或無標準歸屬時的第一個）
+                    confirmed_signatures.setdefault(sig, cve_id)
+                    cve_record["independent"] = True
+
+            if not cve_record["success"] and not cve_record.get("duplicate_of"):
                 log_info.info(f"   ❌ {cve_id} 經 {len(cve_record['attempts'])} 次嘗試未命中，記錄為 attempted。")
 
             attempts_log.append(cve_record)
@@ -961,13 +1277,16 @@ class PentestSOP:
         self._reload()
         self.sm["exploit_attempts"] = attempts_log
         self._save()
-        succ = sum(1 for a in attempts_log if a["success"])
-        log_info.info(f"✅ Stage 5 完成：{len(attempts_log)} 個 CVE，成功 {succ}、未果 {len(attempts_log) - succ}")
+        succ = sum(1 for a in attempts_log if a.get("success"))
+        dup = sum(1 for a in attempts_log if a.get("duplicate_of"))
+        other = len(attempts_log) - succ - dup
+        log_info.info(
+            f"✅ Stage 5 完成：{len(attempts_log)} 個 CVE，"
+            f"獨立成功 {succ}、同注入點去重 {dup}、其餘未果/未驗證 {other}"
+        )
 
-    # ==================================================================
-    # Stage 6（執行順序）：產生 Markdown + JSON 報告  [def stage5_report]
-    # ==================================================================
     def stage5_report(self):
+        """[ Stage 6 執行順序 ] 彙整 share_memory 產生 Markdown 報告，回傳報告檔路徑。"""
         log_info.info("═══ Stage 6：產生 Markdown 報告 ═══")
         self._reload()
         path = report_mod.generate_markdown_report(self.sm, self.target_ip)
@@ -978,14 +1297,16 @@ class PentestSOP:
     # 執行順序（依資料依賴排；編號即網頁進度列顯示的 1~6）
     STAGES = [
         ("資產偵察",  "stage1_recon"),
-        ("Web 列舉",  "stage3_web_enum"),
+        ("Web 列舉",  "stage2_web_enum"),
         ("裝置指紋",  "_fingerprint_device"),
-        ("漏洞檢索",  "stage2_vuln_search"),
+        ("漏洞檢索",  "stage3_vuln_search"),
         ("漏洞驗證",  "stage4_verify"),
         ("產生報告",  "stage5_report"),
     ]
 
     def run(self):
+        """依 STAGES 的順序跑完整條 SOP（偵察 → Web 列舉 → 指紋 → 漏洞檢索 → 驗證 → 報告），
+        每進一階段先回報進度列，結束時回傳報告檔路徑。"""
         log_info.info("🚀 PentestGPT v2 (SOP 固定流程版) 啟動！")
         # ⚠️【順序】Web 分析 → 裝置指紋(標準協定主動探測) → 漏洞檢索。
         #    指紋階段用標準協定抽出真實 vendor/model/firmware，再驅動漏洞檢索；

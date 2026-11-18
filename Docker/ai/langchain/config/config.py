@@ -31,7 +31,7 @@ PARSING_MODEL = os.getenv("PARSING_MODEL", OLLAMA_MODEL)
 # [NEW] 🎯 目標與沙盒設定 (Target & Workspace Configuration)
 # =============================================================================
 # 這裡從 .yml 變數讀取目標 IP，如果沒設定，預設為 D-Link 靶機的 192.168.0.1
-TARGET_IP = os.getenv("PENTEST_TARGET", os.getenv("TARGET_IP", "192.168.0.1"))
+TARGET_IP = os.getenv("TARGET_IP", "192.168.0.1")
 
 # 設定工作沙盒路徑 (當前目錄下的 workspace 資料夾)
 WORKSPACE_DIR = Path.cwd() / "workspace"

@@ -6,6 +6,8 @@ import re
 import shutil
 import subprocess
 import sys
+import socket
+import xml.etree.ElementTree as ET
 import urllib.request
 from urllib.parse import urljoin, urlparse
 import requests
@@ -179,6 +181,242 @@ def ensure_python_package(pkg_name: str, import_name: str = None) -> bool:
         return False
 
 
+# =============================================================================
+# 📡 通用型 IoT 裝置指紋辨識器（HTTP 爬取 + UPnP/SSDP + 可選 OCR）
+#   來源：自製 UniversalDeviceIdentifier，包裝成 toolbox 可呼叫的工具。
+#   與既有 _fingerprint_device 的標準協定探測互補：
+#     - 這支做「廣度」：爬首頁跳轉 / 子框架 / .php 設定腳本 / CSS logo OCR / SSDP 主動探測
+#     - 標準協定那支做「深度」：HNAP / UPnP XML 的高可信欄位
+#   全程走 curl、不落地存檔；tesseract 存在才做 OCR，缺了自動略過。
+#   print 已換成 log_info；run() 改成回傳 report dict（set 型別，呼叫端自行正規化）。
+# =============================================================================
+class UniversalDeviceIdentifier:
+    def __init__(self, target_ip, port=80):
+        self.target_ip = target_ip.strip()
+        self.port = port
+        self.base_url = f"http://{self.target_ip}:{self.port}"
+
+        self.report = {
+            "brand": set(),
+            "models": set(),
+            "fw_versions": set(),
+            "hw_versions": set(),
+            "server": "未知",
+            "upnp_info": {},
+            "clues": [],
+        }
+
+        self.known_brands = [
+            "D-Link", "Netgear", "TP-Link", "ASUS", "Linksys", "Cisco",
+            "Zyxel", "Trendnet", "Belkin", "Tenda", "Huawei", "ZTE",
+            "DrayTek", "MikroTik", "Ubiquiti", "Edimax", "Buffalo",
+            "Totolink", "Mercusys", "Hikvision", "Dahua", "Synology", "QNAP",
+        ]
+
+        self.noise_words = {
+            "miniupnp", "miniupnpd", "wan device", "internet gateway device",
+            "root device", "wireless router", "home router", "access point",
+        }
+
+    def fetch_via_curl(self, url, binary=False):
+        """使用系統 curl 取得文字或二進位變數，完全不寫入硬碟"""
+        if not shutil.which("curl"):
+            return None, {}, "系統未安裝 curl"
+
+        if binary:
+            # 直接將圖片二進位資料讀入 stdout 變數中
+            cmd = ["curl", "-s", "-m", "5", "--noproxy", "*", "-A", "Mozilla/5.0", url]
+            res = subprocess.run(cmd, capture_output=True)
+            if res.returncode == 0 and res.stdout:
+                return 200, {}, res.stdout
+            return None, {}, b""
+
+        cmd = ["curl", "-s", "-i", "-m", "5", "--noproxy", "*", "-A", "Mozilla/5.0", url]
+        res = subprocess.run(cmd, capture_output=True, text=True, errors="ignore")
+
+        if res.returncode != 0 or not res.stdout:
+            return None, {}, f"連線失敗 (curl exit code: {res.returncode})"
+
+        parts = re.split(r"\r?\n\r?\n", res.stdout, maxsplit=1)
+        raw_headers = parts[0]
+        body = parts[1] if len(parts) > 1 else ""
+
+        status_match = re.search(r"HTTP/\d\.\d\s+(\d+)", raw_headers)
+        status = int(status_match.group(1)) if status_match else 200
+
+        headers = {}
+        for line in raw_headers.splitlines()[1:]:
+            if ":" in line:
+                k, v = line.split(":", 1)
+                headers[k.strip()] = v.strip()
+
+        return status, headers, body
+
+    def extract_generic_patterns(self, text):
+        if not text:
+            return
+
+        for brand in self.known_brands:
+            if re.search(rf"\b{re.escape(brand)}\b", text, re.IGNORECASE):
+                self.report["brand"].add(brand)
+
+        model_candidates = re.findall(
+            r"\b(?:DIR|DAP|DSL|DCS|WNR|WNDR|WNAP|WNDAP|R|GS|FVS|TL|WR|WA|Archer|RT|AC|AX|WRT|EA|E|USG|NBG|TEW|BR|WHR|WZR|HG|EG)[-\s]?[0-9]{2,4}[A-Z0-9v\.]*\b",
+            text,
+        )
+        for m in model_candidates:
+            m_clean = m.strip()
+            if re.search(rf'"{re.escape(m_clean)}"\s*:\s*\{{[^}}]*"status"\s*:\s*false', text, re.IGNORECASE):
+                continue
+            if not re.match(r"^[A-Z]?20[0-2][0-9]$", m_clean) and len(m_clean) >= 4:
+                self.report["models"].add(m_clean)
+
+        fw_matches = re.findall(
+            r'(?:Firmware|Software|F/W|S/W|Build)\s*(?:Version|Ver\.?|Rev\.?)?\s*[:=]\s*["\']?([vV]?[0-9]+(?:\.[0-9a-zA-Z_-]+)+)["\']?',
+            text, re.IGNORECASE,
+        )
+        for fw in fw_matches:
+            self.report["fw_versions"].add(fw)
+
+        hw_matches = re.findall(
+            r'(?:Hardware|H/W|Board)\s*(?:Version|Ver\.?|Rev\.?)?\s*[:=]\s*["\']?([A-Z0-9]+(?:\.[0-9A-Z]+)*)["\']?',
+            text, re.IGNORECASE,
+        )
+        for hw in hw_matches:
+            if len(hw) <= 10:
+                self.report["hw_versions"].add(hw)
+
+    def analyze_specs_and_images(self, sub_url, html_content):
+        """解析動態設定檔規格，並將 Logo 圖片讀入記憶體變數進行辨識"""
+        # 1. 解析動態設定腳本
+        scripts = re.findall(r'src=["\']([^"\']+\.php[^"\']*)["\']', html_content, re.IGNORECASE)
+        for sc in scripts:
+            sc_url = urljoin(sub_url, sc)
+            st, _, sc_body = self.fetch_via_curl(sc_url)
+            if st == 200 and sc_body:
+                self.extract_generic_patterns(sc_body)
+                if '"TWOGHZ":{"status":true}' in sc_body and '"FIVEGHZ":{"status":false}' in sc_body:
+                    if '"MODE11N":{"status":true}' in sc_body and '"MAXSTATION":{"count":64}' in sc_body:
+                        # ⚠️ 存「乾淨型號 token」而非顯示字串 —— 下游 NVD/RAG 檢索吃的是這個，
+                        #    'ProSAFE WNAP210 (或 WNAP320)' 帶前綴/括號/中文會查不到。
+                        self.report["models"].add("WNAP210")
+                        self.report["models"].add("WNAP320")
+                        self.report["clues"].append("硬體規格符合單頻 2.4G / 802.11n / 64連線商用 AP（研判 WNAP210 或 WNAP320）")
+
+        # 2. 尋找 CSS 中的型號圖片，直接存入記憶體變數 (img_bytes) 處理
+        css_files = re.findall(r'href=["\']([^"\']+\.css[^"\']*)["\']', html_content, re.IGNORECASE)
+        for css in css_files:
+            css_url = urljoin(sub_url, css)
+            st, _, css_body = self.fetch_via_curl(css_url)
+            if st == 200 and css_body:
+                logo_match = re.search(r'\.vertionImage\s*\{[^}]*url\(["\']?(.*?)["\']?\)', css_body, re.IGNORECASE)
+                if logo_match:
+                    img_url = urljoin(css_url, logo_match.group(1))
+                    img_st, _, img_bytes = self.fetch_via_curl(img_url, binary=True)
+
+                    if img_st == 200 and len(img_bytes) > 100:
+                        _clue = f"已從記憶體讀取型號圖片 ({len(img_bytes)} bytes，未落地存檔)"
+                        if _clue not in self.report["clues"]:   # 去重：每個子頁都會重抓一次 logo
+                            self.report["clues"].append(_clue)
+                        # 若系統有安裝 tesseract，透過 stdin 直接傳遞記憶體變數進行 OCR
+                        if shutil.which("tesseract"):
+                            ocr = subprocess.run(
+                                ["tesseract", "stdin", "stdout"],
+                                input=img_bytes,
+                                capture_output=True,
+                            )
+                            ocr_text = ocr.stdout.decode("utf-8", errors="ignore")
+                            self.extract_generic_patterns(ocr_text)
+
+    def probe_http_and_crawl(self):
+        log_info.info(f"[指紋] 階段1：通用 HTTP 服務與網頁結構探測 ({self.base_url})")
+        status, headers, root_html = self.fetch_via_curl(self.base_url + "/")
+        if not status:
+            log_info.warn(f"   [-] HTTP 連線失敗: {root_html}")
+            return
+
+        self.report["server"] = headers.get("Server", "未知")
+        auth_header = headers.get("WWW-Authenticate", "")
+        if auth_header:
+            self.report["clues"].append(f"認證標頭: {auth_header}")
+            self.extract_generic_patterns(auth_header)
+
+        self.extract_generic_patterns(root_html)
+
+        discovered_paths = set()
+        discovered_paths.update(re.findall(r'<i?frame[^>]+src=["\']([^"\']+)["\']', root_html, re.IGNORECASE))
+        discovered_paths.update(re.findall(r'location(?:\.href)?\s*=\s*["\']([^"\']+)["\']', root_html, re.IGNORECASE))
+        discovered_paths.update(re.findall(r'content=["\']\d+;\s*url=([^"\']+)["\']', root_html, re.IGNORECASE))
+
+        valid_paths = [
+            p for p in discovered_paths
+            if p.strip() and not p.startswith(("http://", "https://", "javascript:", "#"))
+            and not p.lower().endswith((".gif", ".jpg", ".png", ".css", ".ico"))
+        ]
+
+        if valid_paths:
+            log_info.info(f"   自動追蹤頁面跳轉與子框架: {valid_paths}")
+            for path in valid_paths:
+                full_url = urljoin(self.base_url + "/", path)
+                sub_status, _, sub_html = self.fetch_via_curl(full_url)
+                if sub_status == 200 and sub_html:
+                    log_info.info(f"   [+] 成功解析子頁面: {path}")
+                    self.extract_generic_patterns(sub_html)
+                    self.analyze_specs_and_images(full_url, sub_html)
+
+                    year_match = re.search(r"Copyright.*?1996-(\d{4})", sub_html, re.IGNORECASE)
+                    if year_match and "1.4.18" in self.report["server"]:
+                        self.report["fw_versions"].add(f"v1 架構 / 早期韌體 (約 {year_match.group(1)} 年 v2.0.x 系列)")
+
+    def probe_upnp(self):
+        log_info.info("[指紋] 階段2：通用 UPnP / SSDP 協定探測 (UDP 1900)")
+        msg = (
+            "M-SEARCH * HTTP/1.1\r\n"
+            f"HOST: {self.target_ip}:1900\r\n"
+            'MAN: "ssdp:discover"\r\n'
+            "MX: 2\r\n"
+            "ST: upnp:rootdevice\r\n\r\n"
+        )
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.settimeout(3)
+        try:
+            sock.sendto(msg.encode(), (self.target_ip, 1900))
+            data, _ = sock.recvfrom(4096)
+            response = data.decode("utf-8", errors="ignore")
+            for line in response.split("\r\n"):
+                if line.upper().startswith("LOCATION:"):
+                    xml_url = line.split(":", 1)[1].strip()
+                    log_info.info(f"   [+] 發現 UPnP 描述檔: {xml_url}")
+                    status, _, xml_text = self.fetch_via_curl(xml_url)
+                    if status == 200 and xml_text:
+                        root = ET.fromstring(xml_text)
+                        for elem in root.iter():
+                            tag = elem.tag.split("}", 1)[-1] if "}" in elem.tag else elem.tag
+                            if tag in ["manufacturer", "modelName", "modelNumber", "modelDescription"] and elem.text:
+                                val = elem.text.strip()
+                                self.report["upnp_info"][tag] = val
+                                if tag == "manufacturer" and val.lower() not in self.noise_words:
+                                    self.report["brand"].add(val)
+                                elif tag in ["modelName", "modelNumber"] and val.lower() not in self.noise_words:
+                                    if not re.match(r"^20\d{6}$", val):
+                                        self.report["models"].add(val)
+                                    else:
+                                        self.report["clues"].append(f"UPnP 建置日期碼: {val}")
+                    break
+        except socket.timeout:
+            log_info.info("   [-] UPnP 探測無回應 (設備可能未開啟 UPnP)。")
+        except Exception as e:
+            log_info.info(f"   [-] UPnP 探測略過: {e}")
+        finally:
+            sock.close()
+
+    def run(self):
+        """回傳 report dict（set 型別，呼叫端自行正規化成 list）。"""
+        self.probe_http_and_crawl()
+        self.probe_upnp()
+        return self.report
+
+
 class PentestToolbox:
 
     def __init__(self, target_ip: str):
@@ -211,6 +449,70 @@ class PentestToolbox:
             f"請在 ai/langchain/Dockerfile 的 apt-get install 清單補上後 rebuild。"
         )
         return False
+
+    def identify_device(self, port: int = 80) -> dict:
+        """📡 通用裝置指紋辨識（HTTP 爬取 + UPnP + 可選 OCR）。
+        跑 UniversalDeviceIdentifier，把廠牌/型號/韌體/硬體版號正規化後，
+        用 setdefault 填回 share_memory 的 web_footprints（不覆蓋更高可信的值），
+        讓抽到的型號自動流進 Stage 4 漏洞檢索。
+        回傳正規化 dict：
+          {vendor, model, firmware, hw_version, server,
+           models_all, brands_all, clues, upnp_info}。
+        失敗或無結果回 {}。"""
+        log_info.tool("identify_device")
+
+        if not PentestToolbox.ensure_tool_installed("curl"):
+            log_info.warn("⚠️ [identify_device] 缺少 curl，裝置指紋辨識略過。")
+            return {}
+
+        try:
+            report = UniversalDeviceIdentifier(self.target_ip, port=port).run()
+        except Exception as e:
+            log_info.error(f"❌ [identify_device] 執行失敗：{e}")
+            return {}
+
+        # set → 有序 list；挑單一最佳值給既有流程用
+        brands = sorted(report.get("brand", set()))
+        models = sorted(report.get("models", set()))
+        fws = sorted(report.get("fw_versions", set()))
+        hws = sorted(report.get("hw_versions", set()))
+        server = report.get("server", "")
+        server = server if server not in ("未知", "") else ""
+
+        norm = {
+            "vendor": brands[0] if brands else "",
+            "model": models[0] if models else "",
+            "firmware": fws[0] if fws else "",
+            "hw_version": hws[0] if hws else "",
+            "server": server,
+            "models_all": models,
+            "brands_all": brands,
+            "clues": report.get("clues", []),
+            "upnp_info": report.get("upnp_info", {}),
+        }
+
+        # 寫回 share_memory：用 setdefault，只補不覆蓋（標準協定探測的高可信值優先）
+        sm = util.get_share_memory()
+        wf = sm.setdefault("web_footprints", {})
+        if norm["vendor"]:
+            wf.setdefault("iot_vendor", {}).setdefault("name", norm["vendor"])
+        if norm["model"]:
+            wf.setdefault("device_model", norm["model"])
+        if norm["firmware"]:
+            wf.setdefault("firmware_version", norm["firmware"])
+        if norm["hw_version"]:
+            wf.setdefault("hardware_version", norm["hw_version"])
+        if norm["server"]:
+            wf.setdefault("server", norm["server"])
+        sm["device_identify"] = norm   # 完整結果另存，供報告 / 多型號檢索用
+        util.update_share_memory(sm)
+        log_info.share_memory(sm)
+
+        log_info.info(
+            f"📡 [identify_device] 廠牌={brands or '—'} 型號={models or '—'} "
+            f"韌體={fws or '—'} 硬體={hws or '—'}"
+        )
+        return norm
 
     def nmap_scan_tcp(self, sensitive_ports: set = None) -> list:
         """SOP 第一階段：TCP 全埠快速探測與非敏感埠深度版本偵測"""

