@@ -80,36 +80,39 @@ class ReportQuery(BaseModel):
 
 
 def _sync_get_report(device_name: Optional[str] = None):
-    """讀取 workspace/reports/ 底下最新的 JSON 報告（可選用設備名稱過濾）。"""
+    """讀取 workspace/reports/ 底下最新的 Markdown 報告（可選用設備名稱過濾），回傳 .md 文字。"""
     project_root = util.get_folder().parent.parent
     reports_dir = (
         project_root / "Docker" / "ai" / "langchain" / "workspace" / "reports"
     ).resolve()
+    # host 實際掛載點若不同，可用環境變數 REPORT_MD_DIR 覆寫
+    env_dir = os.getenv("REPORT_MD_DIR")
+    if env_dir:
+        reports_dir = Path(env_dir).resolve()
 
     if not reports_dir.is_dir():
-        return {"status": 404, "message": f"找不到報告資料夾: {reports_dir}", "report": None}
+        return {"status": 404, "message": f"找不到報告資料夾: {reports_dir}", "markdown": None}
 
     files = []
     if device_name:
         files = sorted(
-            reports_dir.glob(f"{device_name}_*.json"),
+            reports_dir.glob(f"{device_name}_*.md"),
             key=lambda p: p.stat().st_mtime, reverse=True,
         )
     # 指定設備找不到（或沒給設備名）→ 退回取整個資料夾最新的
     if not files:
         files = sorted(
-            reports_dir.glob("*.json"),
+            reports_dir.glob("*.md"),
             key=lambda p: p.stat().st_mtime, reverse=True,
         )
     if not files:
-        return {"status": 404, "message": "尚無任何報告，請先完成一次滲透測試。", "report": None}
+        return {"status": 404, "message": "尚無任何報告，請先完成一次滲透測試。", "markdown": None}
 
     try:
-        with open(files[0], "r", encoding="utf-8") as f:
-            report = json.load(f)
-        return {"status": 200, "report": report, "file": files[0].name}
+        text = files[0].read_text(encoding="utf-8")
+        return {"status": 200, "markdown": text, "file": files[0].name}
     except Exception as e:
-        return {"status": 500, "message": f"讀取報告失敗: {e}", "report": None}
+        return {"status": 500, "message": f"讀取報告失敗: {e}", "markdown": None}
 
 
 def _check_web_service_ready(url: str, timeout_sec: int = 30) -> bool:

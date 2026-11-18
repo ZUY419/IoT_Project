@@ -9,8 +9,8 @@ const state = {
     ai_history: "",
     iot_log_history: "",          // IoT 模擬日誌歷史
     share_memory_data: null,
-    tool_history_logs: [],
     stage: null,                  // {index,total,name} 目前階段
+    cve_progress: null,           // {current,total,cve_id,status} 漏洞驗證子進度
     done: false,                  // 流程是否已完成
     last_report_file: ""          // 最近一份報告檔名
 };
@@ -97,7 +97,19 @@ function updateStageBar() {
     const label = state.done
         ? `✅ 已完成（共 ${total} 階段）`
         : `階段 ${cur}/${total}：${escapeHtml(st.name || "")}`;
-    bar.innerHTML = `<div class="stage_steps">${steps}</div><div class="stage_label">${label}</div>`;
+
+    // 漏洞驗證階段：即時顯示「已測幾個 / 共幾個 CVE」子進度
+    let cveLine = "";
+    const cp = state.cve_progress;
+    if (!state.done && cp && cp.total) {
+        if (cp.status === "done" || cp.current >= cp.total) {
+            cveLine = `<div class="cve_progress">🔎 漏洞驗證：已測完 ${cp.total} 個 CVE</div>`;
+        } else {
+            const nowCve = cp.cve_id ? `（目前：${escapeHtml(cp.cve_id)}）` : "";
+            cveLine = `<div class="cve_progress">🔎 漏洞驗證：第 <b>${cp.current}</b> / ${cp.total} 個 CVE${nowCve}</div>`;
+        }
+    }
+    bar.innerHTML = `<div class="stage_steps">${steps}</div><div class="stage_label">${label}</div>${cveLine}`;
 }
 
 // 浮動通知
@@ -135,9 +147,9 @@ function clearAllData() {
     state.ai_history = "";
     state.iot_log_history = "";
     state.share_memory_data = null;
-    state.tool_history_logs = [];
     state.current_tool = "";
     state.stage = null;
+    state.cve_progress = null;
     state.done = false;
     state.last_report_file = "";
     clearReportReady();
@@ -145,6 +157,20 @@ function clearAllData() {
     // 重新渲染目前分頁，讓畫面上的舊內容一併清空
     const activeBtn = document.querySelector(".switch_show_button.action");
     if (activeBtn) switch_button_state(activeBtn);
+}
+
+// 清「終端機 + AI 對話 + 共享記憶體」的狀態（給「重新開始」用）——不碰 IoT 日誌 /
+// 報告 / 進度條。
+function clearRestartData() {
+    state.log_history = "";
+    state.ai_history = "";
+    state.share_memory_data = null;
+    state.current_tool = "";
+    // 若目前正停在這三個分頁之一，重渲染把畫面上的舊內容清掉；其他分頁只清狀態、不動畫面
+    if (["Terminal", "AI Interaction", "Shared Memory"].includes(state.current_tab)) {
+        const activeBtn = document.querySelector(".switch_show_button.action");
+        if (activeBtn) switch_button_state(activeBtn);
+    }
 }
 
 // ===== 1. 分頁切換與 UI 渲染 =====
@@ -180,11 +206,6 @@ async function switch_button_state(clickedButton) {
         case "Shared Memory":
             if (info_title_name) info_title_name.textContent = "當前共享記憶體的資料";
             render_share_memory();
-            break;
-
-        case "Tool History":
-            if (info_title_name) info_title_name.textContent = "當前使用過的工具";
-            render_tool_history();
             break;
 
         case "AI Interaction":
@@ -375,9 +396,18 @@ function initReceiver() {
                 try {
                     const st = (typeof data.log === "string") ? JSON.parse(data.log) : data.log;
                     state.stage = st;        // {index,total,name}
+                    state.cve_progress = null;   // 換階段先清掉上一階段殘留的 CVE 計數
                     state.done = false;
                     updateStageBar();
                 } catch (e) { console.warn("STAGE 解析失敗", e); }
+
+            // 分流 2.1b：漏洞驗證子進度 (agent 每開始測一個 CVE 送一次) → 即時更新計數
+            } else if (log_type === "CVE_PROGRESS") {
+                try {
+                    const cp = (typeof data.log === "string") ? JSON.parse(data.log) : data.log;
+                    state.cve_progress = cp;   // {current,total,cve_id,status}
+                    updateStageBar();
+                } catch (e) { console.warn("CVE_PROGRESS 解析失敗", e); }
 
             // 分流 2.2：流程完成 (agent 跑完送一次) → 通知 + 自動載入報告
             } else if (log_type === "DONE") {
@@ -423,12 +453,6 @@ function initReceiver() {
                     if (info_title_data && state.current_tab === "Terminal") {
                         info_title_data.textContent = state.current_tool;
                     }
-
-                    state.tool_history_logs.push(data);
-                    
-                    if (state.current_tab === "Tool History") {
-                        render_tool_history();
-                    }
                 }
 
                 const newTerminalLogHTML = `
@@ -470,37 +494,6 @@ function initReceiver() {
     wsB.onerror = function(err) {
         console.error("[WebSocket 錯誤]", err);
     };
-}
-
-// ===== 4. 工具歷史紀錄 (Tool History) 渲染器 =====
-function render_tool_history() {
-    const info_show_block = document.querySelector(".info_show_block");
-    if (!info_show_block) return;
-
-    if (state.tool_history_logs.length === 0) {
-        info_show_block.innerHTML = `<p style="color: #FFF8F0; opacity: 0.7; padding: 20px; text-align: center;">尚未收到工具執行紀錄...</p>`;
-        return;
-    }
-
-    let html = `<div style="display: flex; flex-direction: column; gap: 10px; height: 100%; overflow-y: auto;">`;
-    state.tool_history_logs.forEach((item, index) => {
-        html += `
-            <div class="tool_card">
-                <div class="tool_card_header">
-                    <div class="tool_title_group">
-                        <span class="tool_badge">Tool #${index + 1}</span>
-                        <span class="tool_name">${escapeHtml(item.log_type)}</span>
-                    </div>
-                </div>
-                <div class="tool_card_body">
-                    <div class="tool_argument">${escapeHtml(item.log)}</div>
-                </div>
-            </div>
-        `;
-    });
-    html += `</div>`;
-
-    info_show_block.innerHTML = html;
 }
 
 // ===== 4.5. IoT 模擬日誌：單筆渲染 =====
@@ -699,11 +692,97 @@ async function render_final_report() {
         return;
     }
 
-    if (!res || res.status !== 200 || !res.report) {
+    if (!res || res.status !== 200 || !res.markdown) {
         info_show_block.innerHTML = `<div class="memory_empty_notice">${escapeHtml((res && res.message) || "尚無報告，請先完成一次滲透測試。")}</div>`;
         return;
     }
-    info_show_block.innerHTML = buildReportHTML(res.report, res.file);
+
+    const info_title_data = document.querySelector(".info_title_data");
+    if (info_title_data && res.file) info_title_data.textContent = res.file;
+
+    info_show_block.innerHTML = `<div class="md_report" id="report_container">${renderMarkdown(res.markdown)}</div>`;
+    const rc = document.getElementById("report_container");
+    if (rc) rc.scrollTop = 0;   // 報告從頂部開始看
+}
+
+// 迷你 Markdown 渲染器：只處理 report.py 會產生的語法，全程跳脫 HTML（靶機回傳內容不會造成 XSS）。
+function renderMarkdown(md) {
+    const esc = s => String(s)
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const inline = t => esc(t)
+        .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+        .replace(/`([^`]+)`/g, '<code class="md_code">$1</code>');
+
+    // 先抽出 ``` 區塊，內容不再被當 markdown 處理
+    const blocks = [];
+    md = md.replace(/```[a-zA-Z]*\n?([\s\S]*?)```/g, (m, c) => {
+        blocks.push(`<pre class="md_pre"><code>${esc(c.replace(/\s+$/, ""))}</code></pre>`);
+        return `@@CODE${blocks.length - 1}@@`;
+    });
+
+    const lines = md.split("\n");
+    const out = [];
+    let i = 0, inList = false;
+    const closeList = () => { if (inList) { out.push("</ul>"); inList = false; } };
+    // 表格列拆欄：以「未被反斜線跳脫的 |」分隔，再把 \| 還原成 |
+    const parseRow = r => r.trim().replace(/^\|/, "").replace(/\|$/, "")
+        .split(/(?<!\\)\|/).map(c => c.trim().replace(/\\\|/g, "|"));
+
+    while (i < lines.length) {
+        const line = lines[i];
+        const t = line.trim();
+
+        if (/^@@CODE\d+@@$/.test(t)) { closeList(); out.push(t); i++; continue; }
+        if (t === "") { closeList(); i++; continue; }
+        if (/^---+$/.test(t)) { closeList(); out.push('<hr class="md_hr">'); i++; continue; }
+
+        const hm = line.match(/^(#{1,6})\s+(.*)$/);
+        if (hm) { closeList(); const lv = hm[1].length; out.push(`<h${lv} class="md_h${lv}">${inline(hm[2])}</h${lv}>`); i++; continue; }
+
+        if (/^>\s?/.test(line)) {
+            closeList();
+            const q = [];
+            while (i < lines.length && /^>\s?/.test(lines[i])) { q.push(inline(lines[i].replace(/^>\s?/, ""))); i++; }
+            out.push(`<blockquote class="md_quote">${q.join("<br>")}</blockquote>`);
+            continue;
+        }
+
+        // 表格：本列以 | 開頭，且下一列是 |---| 分隔列
+        if (t.startsWith("|") && i + 1 < lines.length &&
+            /^\s*\|?[\s:|-]+\|?\s*$/.test(lines[i + 1]) && lines[i + 1].includes("-")) {
+            closeList();
+            const header = parseRow(line);
+            i += 2;
+            const rows = [];
+            while (i < lines.length && lines[i].trim().startsWith("|")) { rows.push(parseRow(lines[i])); i++; }
+            let tbl = '<div class="md_table_wrap"><table class="md_table"><thead><tr>';
+            header.forEach(h => tbl += `<th>${inline(h)}</th>`);
+            tbl += "</tr></thead><tbody>";
+            rows.forEach(r => {
+                tbl += "<tr>";
+                header.forEach((_, ci) => tbl += `<td>${inline(r[ci] || "")}</td>`);
+                tbl += "</tr>";
+            });
+            tbl += "</tbody></table></div>";
+            out.push(tbl);
+            continue;
+        }
+
+        if (/^[-*]\s+/.test(line)) {
+            if (!inList) { out.push('<ul class="md_ul">'); inList = true; }
+            out.push(`<li>${inline(line.replace(/^[-*]\s+/, ""))}</li>`);
+            i++; continue;
+        }
+
+        closeList();
+        out.push(`<p class="md_p">${inline(line)}</p>`);
+        i++;
+    }
+    closeList();
+
+    let html = out.join("\n");
+    html = html.replace(/@@CODE(\d+)@@/g, (m, n) => blocks[+n] || "");
+    return html;
 }
 
 function buildReportHTML(d, fileName) {
@@ -895,9 +974,10 @@ async function restart_ai(btn) {
 
         if (response.ok && data.status === 200) {
             console.log(`[Restart AI] ${data.message || "已送出重啟指令"}`);
-            // 重新啟動：清掉上一輪在網頁留下的所有資料（保留目前設備）
-            clearAllData();
-            showToast("🔄 已重新啟動，網頁資料已清空。");
+            // 重新開始：清「終端機 + AI 對話 + 共享記憶體」的內容，
+            // 其餘分頁（IoT 日誌 / 最終報告）保留不動
+            clearRestartData();
+            showToast("🔄 已重新開始，終端機、AI 對話與共享記憶體已清空。");
         } else {
             alert(`重新啟動失敗: ${data.message || response.statusText}`);
         }
